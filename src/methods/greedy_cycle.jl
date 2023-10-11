@@ -1,6 +1,5 @@
 using DataFrames
 
-
 function greedy_cycle(start_node, distance_matrix, cost_vector)
     current_node = start_node
     cycle = [] # pairs of nodes connected by edge (for plotting)
