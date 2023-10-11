@@ -33,21 +33,19 @@ function evaluate_statistics(file_path, method, iter)
 
     filename = splitext(basename(file_path))[1] * "_"
 
-    stats_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method.csv")
+    stats_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method"*"_stats.csv")
     stats = DataFrame(stat=["mean", "min", "max"], value=[mean(values), minimum(values), maximum(values)])
     CSV.write(stats_file_path, stats)
 
-    best_solution_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.txt")
-    open(best_solution_file_path, "w") do f
-        write(f, "$best_solution")
-    end
+    best_solution_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.csv")
+    CSV.write(best_solution_file_path, DataFrame(x=[coords[i][1] for i in best_solution], 
+                                                    y=[coords[i][2] for i in best_solution]))
 
-    # TODO:  coords of the best solution
-    println("Best solution: ", best_solution)
-    println("\nLowest cost: ", best_cost)
-    println("\nStatistics:")
-    println("Mean: ", mean(values))
-    println("Min: ", minimum(values))
-    println("Max: ", maximum(values))
+    # println("\nBest solution: ", best_solution)
+    # println("\nLowest cost: ", best_cost)
+    # println("\nStatistics:")
+    # println("Mean: ", mean(values))
+    # println("Min: ", minimum(values))
+    # println("Max: ", maximum(values))
 
 end
