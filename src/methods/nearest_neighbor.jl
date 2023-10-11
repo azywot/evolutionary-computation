@@ -1,14 +1,14 @@
 
 """
 # Generate a nearest neighbor solution
-- `N::Integer`: number of nodes
-- `start_nodes::Integer`: starting node
-- `distance_matrix::Matrix{Int64}`: matrix of distances between nodes
-- `cost_vector::Vector{Int64}`: vector of costs of nodes
+- `N::Int`: number of nodes
+- `start_nodes::Int`: starting node
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of nodes
 
 returns: a nearest neighbor solution
 """
-function nn_solution(N, start_node, distance_matrix, cost_vector)
+function nn_solution(N, start_node, distance_matrix)
 
     distance_matrix = deepcopy(distance_matrix)
     solution = [start_node]
