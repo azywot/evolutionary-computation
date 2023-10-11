@@ -9,11 +9,11 @@ returns: a random solution (permutation of nodes)
 """
 function random_solution(N, start_node)
 
-    k = round(Int, N / 2 -1)
-    permutation = randperm(N)[1: k]
+    k = round(Int, N / 2 - 1)
+    permutation = randperm(N)[1:k]
 
     if in(start_node, permutation)
-        while length(permutation) != ceil(N/2)
+        while length(permutation) != ceil(N / 2)
             r = rand(1:N)
             if !(r in permutation)
                 push!(permutation, r)

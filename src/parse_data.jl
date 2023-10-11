@@ -7,11 +7,11 @@ using CSV, DataFrames, Distances
 returns: distance matrix, cost vector, coordinates
 """
 function read_data(filename)
-    df = CSV.read(filename, DataFrame, header=false)
+    df = CSV.read(filename, DataFrame, header = false)
     rename!(df, [:x, :y, :cost])
     coords = [collect(row) for row in eachrow(hcat(df.x, df.y))]
     distance_matrix = round.(Int, pairwise(Euclidean(), coords))
-    for i in 1:size(distance_matrix)[1]
+    for i = 1:size(distance_matrix)[1]
         distance_matrix[i, i] = 1000000
     end
 
