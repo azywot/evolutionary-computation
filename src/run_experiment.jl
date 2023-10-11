@@ -1,8 +1,10 @@
 include("./parse_data.jl")
 include("./methods/all_methods.jl")
 include("./generate_solutions.jl")
+include("./plots/solution_graph.jl")
 
-const N = 200 # number of nodes; NOTE: I'd change it to local since it's passed/read from the shape anyway
+# =================================================================
+# GENERATE AND EVALUATE A SOLUTION:
 filename = "data/TSPA.csv"
 distance_matrix, cost_vector, coords = read_data(filename)
 
@@ -21,3 +23,22 @@ FILE = "data/TSPA.csv"
 evaluate_statistics(FILE, random_solution, 200)
 evaluate_statistics(FILE, nn_solution, 200)
 # evaluate_statistics(filename, greedy_cycle, 200) TODO
+
+# =================================================================
+# PLOT SOLUTIONS:
+generate_solution_graph("results/TSPA_random_solution_best.csv")
+generate_solution_graph("results/TSPA_nn_solution_best.csv")
+# generate_solution_graph("results/TSPA_greedy_cycle_solution_best.csv") TODO
+
+# =================================================================
+# PERFORM EXPERIMENTS FOR ALL PROBLEMS: 
+#  -> delete all of the above stuffas it performs everything that's necessary
+N = 200
+for letter in ["A", "B", "C", "D"]
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    for method in [random_solution, nn_solution]#, greedy_cycle] TODO
+        evaluate_statistics(filename, method, 200)
+        generate_solution_graph("results/TSP$letter" * "_" * "$method" * "_best.csv")
+    end
+end

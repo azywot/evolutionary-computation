@@ -39,7 +39,8 @@ function evaluate_statistics(file_path, method, iter)
 
     best_solution_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.csv")
     CSV.write(best_solution_file_path, DataFrame(x=[coords[i][1] for i in best_solution], 
-                                                    y=[coords[i][2] for i in best_solution]))
+                                                    y=[coords[i][2] for i in best_solution],
+                                                    cost=[cost_vector[i] for i in best_solution]))
 
     # println("\nBest solution: ", best_solution)
     # println("\nLowest cost: ", best_cost)
