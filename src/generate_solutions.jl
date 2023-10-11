@@ -1,17 +1,18 @@
 include("./parse_data.jl")
 
 using Statistics
+using CSV
 
 """
 # Evaluate Statistics for a problem instance given a particaular method.
-- 'filename::String': path to CSV file
+- 'file_path::String': path to CSV file
 - `method::Function`: method to be used to solve the problem
 - `iter::Int`: number of times to run the method default 200
  #nodes >= iter as it itetates over the nodes while choosing the starting point
 """
-function evaluate_statistics(filename, method, iter)
+function evaluate_statistics(file_path, method, iter)
 
-    distance_matrix, cost_vector, coords = read_data(filename)
+    distance_matrix, cost_vector, coords = read_data(file_path)
     N = length(cost_vector)
     values = []
 
@@ -30,7 +31,18 @@ function evaluate_statistics(filename, method, iter)
 
     end
 
-    # TODO: output file for visualisation + coords of the best solution
+    filename = splitext(basename(file_path))[1] * "_"
+
+    stats_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method.csv")
+    stats = DataFrame(stat=["mean", "min", "max"], value=[mean(values), minimum(values), maximum(values)])
+    CSV.write(stats_file_path, stats)
+
+    best_solution_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.txt")
+    open(best_solution_file_path, "w") do f
+        write(f, "$best_solution")
+    end
+
+    # TODO:  coords of the best solution
     println("Best solution: ", best_solution)
     println("\nLowest cost: ", best_cost)
     println("\nStatistics:")
