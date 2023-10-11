@@ -6,7 +6,7 @@ function greedy_cycle(start_node, distance_matrix, cost_vector)
     inf = 1000000
     total_value = cost_vector[start_node]
 
-    for i in 1:(N/2)
+    for i = 1:(N/2)
         distance_matrix[:, current_node] .= inf
         cost_vector[current_node] = inf
 
