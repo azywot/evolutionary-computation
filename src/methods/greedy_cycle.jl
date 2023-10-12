@@ -1,12 +1,23 @@
 using DataFrames
 
-function greedy_cycle(start_node, distance_matrix, cost_vector)
-    current_node = start_node
-    cycle = [] # pairs of nodes connected by edge (for plotting)
-    inf = 1000000
-    total_value = cost_vector[start_node]
+"""
+# Generate a greedy solution
+- `N::Int`: number of nodes
+- `start_nodes::Int`: starting node
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of nodes
 
-    for i = 1:(N/2)
+returns: a nearest neighbor solution
+"""
+function greedy_cycle(N, start_node, distance_matrix, cost_vector)
+    distance_matrix = deepcopy(distance_matrix)
+    cost_vector = deepcopy(cost_vector)
+
+    current_node = start_node
+    solution = [start_node]
+    inf = 1000000
+
+    while length(solution) != ceil(N / 2)
         distance_matrix[:, current_node] .= inf
         cost_vector[current_node] = inf
 
@@ -14,14 +25,9 @@ function greedy_cycle(start_node, distance_matrix, cost_vector)
         costs = cost_vector
         summed = distances + costs
 
-        total_value += minimum(summed)
         new_node = argmin(summed)
-        push!(cycle, (current_node, new_node))
+        push!(solution, new_node)
         current_node = new_node
     end
-    # going back to the start node
-    total_value += distance_matrix[start_node, current_node]
-    push!(cycle, (current_node, start_node))
-
-    return total_value, cycle
+    return solution
 end

@@ -4,10 +4,11 @@ using Random
 # Generate a random solution
 - `N::Int`: number of nodes
 - `start_node::Int`: node to start from
+- `cost_vector::Vector{Int}`: vector of costs of node
 
 returns: a random solution (permutation of nodes)
 """
-function random_solution(N, start_node, distance_matrix=nothing)
+function random_solution(N, start_node, distance_matrix = nothing, cost_vector = nothing)
 
     k = round(Int, N / 2 - 1)
     permutation = randperm(N)[1:k]

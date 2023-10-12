@@ -4,11 +4,11 @@
 - `N::Int`: number of nodes
 - `start_nodes::Int`: starting node
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
-- `cost_vector::Vector{Int}`: vector of costs of nodes
+- `cost_vector::Vector{Int}`: vector of costs of node
 
 returns: a nearest neighbor solution
 """
-function nn_solution(N, start_node, distance_matrix)
+function nn_solution(N, start_node, distance_matrix, cost_vector)
 
     distance_matrix = deepcopy(distance_matrix)
     solution = [start_node]

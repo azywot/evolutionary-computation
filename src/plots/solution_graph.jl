@@ -16,22 +16,28 @@ function generate_solution_graph(solution_path, title = nothing)
     end
 
     df = CSV.read(solution_path, DataFrame)
-    cost_scaled = 1 .+ 9 .* (df.cost .- minimum(df.cost)) / (maximum(df.cost) - minimum(df.cost))
-    fig = plot(df.x, df.y, 
-            marker = :circle, 
-            line = :dash, 
-            legend = false, 
-            markersize = cost_scaled,
-            linecolor = :green, 
-            markercolor = :green,
-            title = title,
-            size=(800, 500)
-        )
-    
+    cost_scaled =
+        1 .+ 9 .* (df.cost .- minimum(df.cost)) / (maximum(df.cost) - minimum(df.cost))
+    fig = plot(
+        df.x,
+        df.y,
+        marker = :circle,
+        line = :dash,
+        legend = false,
+        markersize = cost_scaled,
+        linecolor = :green,
+        markercolor = :green,
+        title = title,
+        size = (800, 500),
+    )
+
     xlabel!("x")
     ylabel!("y")
     plot!([df.x[end], df.x[1]], [df.y[end], df.y[1]], line = :dash, linecolor = :green)
 
-    file_path = joinpath(dirname(solution_path), "plots/" * splitext(basename(solution_path))[1] * ".png")
+    file_path = joinpath(
+        dirname(solution_path),
+        "plots/" * splitext(basename(solution_path))[1] * ".png",
+    )
     savefig(fig, file_path)
 end

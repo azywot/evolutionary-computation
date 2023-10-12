@@ -19,8 +19,8 @@ function evaluate_statistics(file_path, method, iter)
     best_solution = nothing
     best_cost = 1000000
 
-    for i in 1:iter
-        permutation = method(N, i, distance_matrix)
+    for i = 1:iter
+        permutation = method(N, i, distance_matrix, cost_vector)
         cost = evaluate_solution(permutation, distance_matrix, cost_vector)
         push!(values, cost)
 
@@ -33,14 +33,24 @@ function evaluate_statistics(file_path, method, iter)
 
     filename = splitext(basename(file_path))[1] * "_"
 
-    stats_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method"*"_stats.csv")
-    stats = DataFrame(stat=["mean", "min", "max"], value=[mean(values), minimum(values), maximum(values)])
+    stats_file_path =
+        joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_stats.csv")
+    stats = DataFrame(
+        stat = ["mean", "min", "max"],
+        value = [mean(values), minimum(values), maximum(values)],
+    )
     CSV.write(stats_file_path, stats)
 
-    best_solution_file_path = joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.csv")
-    CSV.write(best_solution_file_path, DataFrame(x=[coords[i][1] for i in best_solution], 
-                                                    y=[coords[i][2] for i in best_solution],
-                                                    cost=[cost_vector[i] for i in best_solution]))
+    best_solution_file_path =
+        joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.csv")
+    CSV.write(
+        best_solution_file_path,
+        DataFrame(
+            x = [coords[i][1] for i in best_solution],
+            y = [coords[i][2] for i in best_solution],
+            cost = [cost_vector[i] for i in best_solution],
+        ),
+    )
 
     # println("\nBest solution: ", best_solution)
     # println("\nLowest cost: ", best_cost)
