@@ -7,7 +7,7 @@ using DataFrames
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of nodes
 
-returns: a nearest neighbor solution
+returns: a greedy cycle solution
 """
 function greedy_cycle(N, start_node, distance_matrix, cost_vector)
     distance_matrix = deepcopy(distance_matrix)

@@ -5,14 +5,15 @@ using CSV
 
 """
 # Evaluate Statistics for a problem instance given a particaular method.
-- 'file_path::String': path to CSV file
+- `distance_matrix::Matrix{Int64}` : matrix of distances between nodes
+- `cost_vector::Vector{Int64}` : vector of costs of nodes
+- `coords::Vector{Vector{Int64}}` : coordinates of nodes
 - `method::Function`: method to be used to solve the problem
 - `iter::Int`: number of times to run the method default 200
  #nodes >= iter as it itetates over the nodes while choosing the starting point
 """
-function evaluate_statistics(file_path, method, iter)
+function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter, file_path)
 
-    distance_matrix, cost_vector, coords = read_data(file_path)
     N = length(cost_vector)
     values = []
 
@@ -51,12 +52,5 @@ function evaluate_statistics(file_path, method, iter)
             cost = [cost_vector[i] for i in best_solution],
         ),
     )
-
-    # println("\nBest solution: ", best_solution)
-    # println("\nLowest cost: ", best_cost)
-    # println("\nStatistics:")
-    # println("Mean: ", mean(values))
-    # println("Min: ", minimum(values))
-    # println("Max: ", maximum(values))
 
 end

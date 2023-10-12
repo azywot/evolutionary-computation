@@ -83,17 +83,17 @@ Statistics for the cost function and the best solution for each method.
 ### Greedy cycle
 | Problem instance | min         | max         | mean        | 
 | -----------      | ----------- | ----------- | ----------- |
-| TSPA             | -    | -   | -   |
-| TSPB             | -    | -   | -   |
-| TSPC             | -    | -   | -   |
-| TSPD             | -    | -   | -   |
+| TSPA             | 84471.0     | 95013.0     | 87679.135   |
+| TSPB             | 77448.0     | 82631.0     | 79282.58    |
+| TSPC             | 56304.0     | 63697.0     | 58872.68    |
+| TSPD             | 50335.0     | 59846.0     | 54290.68    |
 
 
 
 | | |
 |:-------------------------:|:-------------------------:|
-|TSPA | TSPB |
-|TSPC | TSPD |
+|![Alt text](image-8.png)|![Alt text](image-9.png)|
+|![Alt text](image-10.png)|![Alt text](image-11.png)|
 
 ## Conclusions:
 TBD
