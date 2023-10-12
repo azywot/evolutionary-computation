@@ -44,7 +44,29 @@ end
 ```
 ### Greedy cycle:
 ```
-TODO
+function greedy_cycle(nodes_number, start_node, distance_matrix, cost_vector)
+
+    current_node = start_node
+    Initialize a solution list with start_node as its only element
+
+    while length of the solution list is not equal to ceil(nodes_number / 2):
+
+        # Mark the current node as visited by setting its distance and cost to infinity
+        Set all values in the current_node column of the distance_matrix to inf
+        Set cost_vector[current_node] to inf
+
+        distances = the row of the current_node in the distance_matrix
+        costs = cost_vector
+        summed = distances + costs
+
+        new_node = index of the minimum value in the summed array
+        
+        Add new_node to the end of the solution list
+        current_node = new_node
+
+    Return the solution list
+end
+
 ```
 
 ## Results
@@ -96,7 +118,9 @@ Statistics for the cost function and the best solution for each method.
 |![Alt text](image-10.png)|![Alt text](image-11.png)|
 
 ## Conclusions:
-TBD
+As one may observe, the three greedy methods implemented take successively more factors into account - basically starting from nothing in the case of `Random` solution, through distances between subsequent points in `Nearest Neighbor` approach and `Greedy Cycle` using both distance and node cost. It is reflected in the results as well, as `Greedy Cycle` method provides the cost function of the smallest value, following by `Nearest Neighbor` and `Random`. 
+
+It is visible that the blobs in the cycle solution are comparatively smaller, and so as the variance between their sizes. As for the `Nearest Neighbor`, as expected, for some cases one will end up with the last point placed far from the start and therefore the start-end node distance can make a solution suboptimal.   
 
 ## Source code:
 https://github.com/azywot/evolutionary-computation
