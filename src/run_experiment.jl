@@ -24,6 +24,9 @@ for letter in ["A", "B", "C", "D"]
     distance_matrix, cost_vector, coords = read_data(filename)
     for method in [random_solution, nn_solution, greedy_cycle]
         evaluate_statistics(distance_matrix, cost_vector, coords, method, 200, filename)
-        generate_solution_graph("results/TSP$letter" * "_" * "$method" * "_best.csv")
+        generate_solution_graph(
+            "results/TSP$letter" * "_" * "$method" * "_best.csv",
+            coords,
+        )
     end
 end
