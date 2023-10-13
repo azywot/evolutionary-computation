@@ -23,17 +23,25 @@ function generate_solution_graph(solution_path, title = nothing)
         df.y,
         marker = :circle,
         line = :dash,
-        legend = false,
+        legend = true,
+        label = "cost",
         markersize = cost_scaled,
         linecolor = :green,
         markercolor = :green,
         title = title,
-        size = (800, 500),
+        size = (900, 500),
     )
 
     xlabel!("x")
     ylabel!("y")
-    plot!([df.x[end], df.x[1]], [df.y[end], df.y[1]], line = :dash, linecolor = :green)
+    plot!(
+        [df.x[end], df.x[1]],
+        [df.y[end], df.y[1]],
+        line = :dash,
+        linecolor = :green,
+        legend = :outertopright,
+        label = "distance",
+    )
 
     file_path = joinpath(
         dirname(solution_path),
