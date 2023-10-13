@@ -117,6 +117,26 @@ Statistics for the cost function and the best solution for each method.
 |![Alt text](image-8.png)|![Alt text](image-9.png)|
 |![Alt text](image-10.png)|![Alt text](image-11.png)|
 
+
+## Comparison
+### Visualizations
+|Problem instance| Random solution | Nearest neighbor | Greedy cycle |
+|----------------|-----------------|------------------|--------------|
+| TSPA | ![img](TSPA_random_solution_best.png)|![img](TSPA_nn_solution_best.png)|![img](TSPA_greedy_cycle_best.png)|
+| TSPB | ![img](TSPB_random_solution_best.png)|![img](TSPB_nn_solution_best.png)|![img](TSPB_greedy_cycle_best.png)|
+| TSPC | ![img](TSPC_random_solution_best.png)|![img](TSPC_nn_solution_best.png)|![img](TSPC_greedy_cycle_best.png)|
+| TSPD | ![img](TSPD_random_solution_best.png)|![img](TSPD_nn_solution_best.png)|![img](TSPD_greedy_cycle_best.png)|
+
+### Results of a computational experiment
+|Problem instance| Random solution | Nearest neighbor | Greedy cycle |
+|----------------|-----------------|------------------|--------------|
+| TSPA | 265387.13 (243653.0-287306.0) | 116516.55 (110035.0-125805.0)| 87679.14 (84471.0-95013.0) |
+| TSPB | 266185.91 (243428.0-296041.0) | 116413.93 (109047.0-124759.0) | 79282.58 (77448.0-82631.0)|
+| TSPC | 214612.4 (184254.0-238277.0) | 66329.95 (62629.0-71814.0)| 58872.68 (56304.0-63697.0)|
+| TSPD | 218680.85 (194298.0-246766.0)| 67119.2 (62967.0-71396.0)| 54290.68 (50335.0-59846.0)|
+
+*cell values: avg (min-max)*
+
 ## Conclusions:
 As one may observe, the three greedy methods implemented take successively more factors into account - basically starting from nothing in the case of `Random` solution, through distances between subsequent points in `Nearest Neighbor` approach and `Greedy Cycle` using both distance and node cost. It is reflected in the results as well, as `Greedy Cycle` method provides the cost function of the smallest value, following by `Nearest Neighbor` and `Random`. 
 
