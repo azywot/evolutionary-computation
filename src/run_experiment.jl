@@ -27,6 +27,7 @@ for letter in ["A", "B", "C", "D"]
         generate_solution_graph(
             "results/TSP$letter" * "_" * "$method" * "_best.csv",
             coords,
+            cost_vector,
         )
     end
 end

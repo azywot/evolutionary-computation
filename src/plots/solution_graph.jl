@@ -10,7 +10,7 @@ using DataFrames
 
 returns: distance matrix, cost vector, coordinates
 """
-function generate_solution_graph(solution_path, coords, title = nothing)
+function generate_solution_graph(solution_path, coords, cost_vector, title = nothing)
 
     if isnothing(title)
         title = replace(splitext(basename(solution_path))[1], "_" => " ")
@@ -22,10 +22,10 @@ function generate_solution_graph(solution_path, coords, title = nothing)
     fig = scatter(
         coords[:, 1],
         coords[:, 2],
-        marker = :circle,
+        marker = :x,
         legend = false,
         markersize = 4,
-        markercolor = :grey,
+        zcolor = cost_vector,
         title = title,
         size = (800, 500),
     )
