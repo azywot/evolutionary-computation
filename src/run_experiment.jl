@@ -25,9 +25,10 @@ for letter in ["A", "B", "C", "D"]
     for method in [random_solution, nn_solution, greedy_cycle]
         evaluate_statistics(distance_matrix, cost_vector, coords, method, 200, filename)
         generate_solution_graph(
-            "results/TSP$letter" * "_" * "$method" * "_best.csv",
+            "results/$method/TSP$letter" * "_best.csv",
             coords,
             cost_vector,
+            "$method",
         )
     end
 end

@@ -6,15 +6,14 @@ using DataFrames
 # Generate
 - `solution_path::String`: path to CSV file with the best solution
 - `coords::Vector{Vector{Int64}}`: vector with all the coordinates
-- `title::String`: title of the plot
+- `cost_vector::Vector{Int64}`: vector with all the costs
+- `method::String`: method used to generate the solution
 
 returns: distance matrix, cost vector, coordinates
 """
-function generate_solution_graph(solution_path, coords, cost_vector, title = nothing)
+function generate_solution_graph(solution_path, coords, cost_vector, method)
 
-    if isnothing(title)
-        title = replace(splitext(basename(solution_path))[1], "_" => " ")
-    end
+    title = uppercase(replace(method* " " * splitext(basename(solution_path))[1], "_" => " "))
 
     df = CSV.read(solution_path, DataFrame)
     coords = reduce(vcat, transpose.(coords))
@@ -48,7 +47,7 @@ function generate_solution_graph(solution_path, coords, cost_vector, title = not
 
     file_path = joinpath(
         dirname(solution_path),
-        "plots/" * splitext(basename(solution_path))[1] * ".png",
+        splitext(basename(solution_path))[1] * ".png",
     )
     savefig(fig, file_path)
 end

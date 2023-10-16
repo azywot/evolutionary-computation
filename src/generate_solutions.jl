@@ -1,7 +1,6 @@
-include("./parse_data.jl")
-
 using Statistics
 using CSV
+using Base.Filesystem
 
 """
 # Evaluate Statistics for a problem instance given a particaular method.
@@ -33,17 +32,23 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     end
 
     filename = splitext(basename(file_path))[1] * "_"
-
-    stats_file_path =
-        joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_stats.csv")
+    results_dir = joinpath(dirname(dirname(file_path)), "results")
+    dir_path = joinpath(results_dir, "$method")
+    
+    stats_file_path = joinpath(dir_path, "$filename" * "stats.csv")
+    
     stats = DataFrame(
         stat = ["mean", "min", "max"],
         value = [mean(values), minimum(values), maximum(values)],
     )
+
+    if !isdir(dir_path)
+        mkpath(dir_path)
+    end
     CSV.write(stats_file_path, stats)
 
     best_solution_file_path =
-        joinpath(dirname(dirname(file_path)), "results", "$filename$method" * "_best.csv")
+        joinpath(dir_path, "$filename" * "best.csv")
     CSV.write(
         best_solution_file_path,
         DataFrame(
