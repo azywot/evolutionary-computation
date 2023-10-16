@@ -11,7 +11,7 @@ function find_nearest_vertex(current_vertex, unvisited, distances)
         end
     end
 
-    return nearest_vertex
+    return nearest_vertex, min_distance
 end
 
 function find_best_insertion(cycle, vertex, distances)
@@ -42,8 +42,15 @@ function greedy_cycle(N, start_node, distances, cost_vector)
     delete!(unvisited, cycle[1])
 
     while length(cycle) < ceil(N / 2)
-        current_vertex = cycle[end]
-        nearest_vertex = find_nearest_vertex(current_vertex, unvisited, distances)
+        min_d = Inf
+        nearest_vertex = 0
+        for node in cycle
+            new_v, new_d = find_nearest_vertex(node, unvisited, distances)
+            if new_d < min_d
+                nearest_vertex = new_v
+                min_d = new_d
+            end
+        end
         best_position = find_best_insertion(cycle, nearest_vertex, distances)
 
         insert!(cycle, best_position, nearest_vertex)
