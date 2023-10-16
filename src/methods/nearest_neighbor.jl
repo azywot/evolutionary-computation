@@ -10,7 +10,7 @@ returns: a nearest neighbor solution
 """
 function nn_solution(N, start_node, distance_matrix, cost_vector)
 
-    distance_matrix = deepcopy(distance_matrix)
+    distance_matrix = deepcopy(distance_matrix) .+ transpose(deepcopy(cost_vector))
     solution = [start_node]
 
     while length(solution) != ceil(N / 2)
