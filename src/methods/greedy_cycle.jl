@@ -1,6 +1,5 @@
 using Random
 
-# Function to find the nearest unvisited vertex
 function find_nearest_vertex(current_vertex, unvisited, distances)
     nearest_vertex = -1
     min_distance = Inf
@@ -12,10 +11,9 @@ function find_nearest_vertex(current_vertex, unvisited, distances)
         end
     end
 
-    return nearest_vertex, min_distance
+    return nearest_vertex
 end
 
-# Function to find the vertex to insert that minimizes the increase in cycle length
 function find_best_insertion(cycle, vertex, distances)
     min_increase = Inf
     best_position = 1
@@ -37,7 +35,6 @@ function find_best_insertion(cycle, vertex, distances)
     return best_position
 end
 
-# Pseudocode implementation
 function greedy_cycle(N, start_node, distances, cost_vector)
     distances = deepcopy(distances) .+ transpose(deepcopy(cost_vector))
     unvisited = Set(1:N)
@@ -46,7 +43,7 @@ function greedy_cycle(N, start_node, distances, cost_vector)
 
     while length(cycle) < ceil(N / 2)
         current_vertex = cycle[end]
-        nearest_vertex, _ = find_nearest_vertex(current_vertex, unvisited, distances)
+        nearest_vertex = find_nearest_vertex(current_vertex, unvisited, distances)
         best_position = find_best_insertion(cycle, nearest_vertex, distances)
 
         insert!(cycle, best_position, nearest_vertex)
@@ -55,11 +52,3 @@ function greedy_cycle(N, start_node, distances, cost_vector)
 
     return cycle
 end
-
-# Example usage
-# Replace this with your actual distance matrix
-# distances = [0 29 20 21; 29 0 15 12; 20 15 0 17; 21 12 17 0]
-# cost_vector = [5, 8, 7, 4]
-
-# tour = tsp_algorithm(distances, cost_vector)
-# println("Optimal tour: ", tour)
