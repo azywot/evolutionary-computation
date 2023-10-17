@@ -7,14 +7,14 @@ Calculate the 2-regret of inserting a node into a solution.
 - `weight::Float64`: weight for the regret
 returns: the 2-regret of inserting the node
 """
-function calculate_2regret(total_cost_matrix, current_solution, new_node, weight=1.0)
+function calculate_2regret(total_cost_matrix, current_solution, new_node, weight)
     n = length(current_solution)
     best_insertion = 1000000
     second_best_insertion = 1000000
     best_insertion_position = -1
 
     if length(current_solution) == 1
-        return 0, 2
+        return - (1 - weight)  * total_cost_matrix[current_solution[1], new_node], 2
     end
 
     for i = 2:n
@@ -29,8 +29,8 @@ function calculate_2regret(total_cost_matrix, current_solution, new_node, weight
     end
 
     regret = best_insertion - second_best_insertion
-    # TODO: ensure it's good: weight*regret+(1-weight) * best_insertion == best_insertion - weight * second_best_insertion -> does it make sense?
-    return weight * regret + (1-weight) * best_insertion, best_insertion_position
+    # TODO: ensure it's good: weight * regret - (1-weight) * best_insertion == 2 * weight * second_best_insertion -> does it make sense?
+    return weight * regret - (1-weight) * best_insertion, best_insertion_position
 end
 
 
