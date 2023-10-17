@@ -1,5 +1,14 @@
 using Random
 
+
+"""
+Find nearest and cheapest vertex
+
+- `current_vertex:Int`: current node
+- `unvisited::Vector{Int}`: list of unvisited nodes
+- `distance_matrix::Matrix{Int}`: matrix of distances+costs between nodes
+returns: nearest vertex and corresponding minimal distance
+"""
 function find_nearest_vertex(current_vertex, unvisited, distances)
     nearest_vertex = -1
     min_distance = Inf
@@ -14,6 +23,15 @@ function find_nearest_vertex(current_vertex, unvisited, distances)
     return nearest_vertex, min_distance
 end
 
+
+"""
+Find best insert
+
+- `cycle::Vector{Int}`: existing cycle
+- `vertex:Int`: current node
+- `distance_matrix::Matrix{Int}`: matrix of distances+costs between nodes
+returns: best position
+"""
 function find_best_insertion(cycle, vertex, distances)
     min_increase = Inf
     best_position = 1
@@ -35,6 +53,16 @@ function find_best_insertion(cycle, vertex, distances)
     return best_position
 end
 
+
+"""
+Compute greedy cycle.
+
+- `N::Int`: number of nodes
+- `start_node::Int`: starting node
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of node
+returns: a greedy cycle solution
+"""
 function greedy_cycle(N, start_node, distances, cost_vector)
     distances = deepcopy(distances) .+ transpose(deepcopy(cost_vector))
     unvisited = Set(1:N)

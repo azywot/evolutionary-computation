@@ -34,9 +34,9 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     filename = splitext(basename(file_path))[1] * "_"
     results_dir = joinpath(dirname(dirname(file_path)), "results")
     dir_path = joinpath(results_dir, "$method")
-    
+
     stats_file_path = joinpath(dir_path, "$filename" * "stats.csv")
-    
+
     stats = DataFrame(
         stat = ["mean", "min", "max"],
         value = [mean(values), minimum(values), maximum(values)],
@@ -47,8 +47,7 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     end
     CSV.write(stats_file_path, stats)
 
-    best_solution_file_path =
-        joinpath(dir_path, "$filename" * "best.csv")
+    best_solution_file_path = joinpath(dir_path, "$filename" * "best.csv")
     CSV.write(
         best_solution_file_path,
         DataFrame(

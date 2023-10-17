@@ -14,11 +14,14 @@ function calculate_2regret(total_cost_matrix, current_solution, new_node, weight
     best_insertion_position = -1
 
     if length(current_solution) == 1
-        return - (1 - weight)  * total_cost_matrix[current_solution[1], new_node], 2
+        return -(1 - weight) * total_cost_matrix[current_solution[1], new_node], 2
     end
 
     for i = 2:n
-        cost = total_cost_matrix[current_solution[i-1], new_node] + total_cost_matrix[new_node, current_solution[i]] - total_cost_matrix[current_solution[i-1], current_solution[i]]
+        cost =
+            total_cost_matrix[current_solution[i-1], new_node] +
+            total_cost_matrix[new_node, current_solution[i]] -
+            total_cost_matrix[current_solution[i-1], current_solution[i]]
         if cost < best_insertion
             second_best_insertion = best_insertion
             best_insertion = cost
@@ -30,7 +33,7 @@ function calculate_2regret(total_cost_matrix, current_solution, new_node, weight
 
     regret = best_insertion - second_best_insertion
     # TODO: ensure it's good: weight * regret - (1-weight) * best_insertion == 2 * weight * second_best_insertion -> does it make sense?
-    return weight * regret - (1-weight) * best_insertion, best_insertion_position
+    return weight * regret - (1 - weight) * best_insertion, best_insertion_position
 end
 
 
@@ -44,20 +47,21 @@ Compute a 2-regret greedy solution.
 - `weights::Float64`: weight for the regret
 returns: a 2-regret greedy solution
 """
-function greedy_2regret(N, start_node, distance_matrix, cost_vector, weight=1.0)
+function greedy_2regret(N, start_node, distance_matrix, cost_vector, weight = 1.0)
 
     total_cost_matrix = deepcopy(distance_matrix) .+ transpose(deepcopy(cost_vector))
     solution = [start_node]
-    unvisited = Set(i for i in 1:N if i != start_node)
+    unvisited = Set(i for i = 1:N if i != start_node)
 
     while length(solution) != ceil(N / 2)
 
         best_node = -1
         best_regret = -1000000
         best_insert_position = -1
-        
+
         for node_candidate in unvisited
-            regret, insert_position = calculate_2regret(total_cost_matrix, solution, node_candidate, weight)
+            regret, insert_position =
+                calculate_2regret(total_cost_matrix, solution, node_candidate, weight)
             if regret > best_regret
                 best_regret = regret
                 best_node = node_candidate
@@ -82,6 +86,12 @@ Compute a 2-regret greedy solution with heuristics.
 - `weights::Float64`: weights for the cost and regret
 returns: a 2-regret greedy solution
 """
-function greedy_2regret_heuristics(N, start_node, distance_matrix, cost_vector, weights=0.5)
+function greedy_2regret_heuristics(
+    N,
+    start_node,
+    distance_matrix,
+    cost_vector,
+    weights = 0.5,
+)
     return greedy_2regret(N, start_node, distance_matrix, cost_vector, weights)
 end

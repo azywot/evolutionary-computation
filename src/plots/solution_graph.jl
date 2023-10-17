@@ -13,7 +13,8 @@ returns: distance matrix, cost vector, coordinates
 """
 function generate_solution_graph(solution_path, coords, cost_vector, method)
 
-    title = uppercase(replace(method* " " * splitext(basename(solution_path))[1], "_" => " "))
+    title =
+        uppercase(replace(method * " " * splitext(basename(solution_path))[1], "_" => " "))
 
     df = CSV.read(solution_path, DataFrame)
     coords = reduce(vcat, transpose.(coords))
@@ -45,9 +46,7 @@ function generate_solution_graph(solution_path, coords, cost_vector, method)
     ylabel!("y")
     plot!([df.x[end], df.x[1]], [df.y[end], df.y[1]], linecolor = :black)
 
-    file_path = joinpath(
-        dirname(solution_path),
-        splitext(basename(solution_path))[1] * ".png",
-    )
+    file_path =
+        joinpath(dirname(solution_path), splitext(basename(solution_path))[1] * ".png")
     savefig(fig, file_path)
 end
