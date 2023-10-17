@@ -46,7 +46,12 @@ function generate_solution_graph(solution_path, coords, cost_vector, method)
     ylabel!("y")
     plot!([df.x[end], df.x[1]], [df.y[end], df.y[1]], linecolor = :black)
 
+
+    previous_filename = splitext(basename(solution_path))[1]
+    instertion_pos = findfirst("_best", previous_filename)[1]
+    new_filename = previous_filename[1:instertion_pos - 1] * "_$method" * previous_filename[instertion_pos:end]
+
     file_path =
-        joinpath(dirname(solution_path), splitext(basename(solution_path))[1] * ".png")
+        joinpath(dirname(solution_path), new_filename * ".png")
     savefig(fig, file_path)
 end
