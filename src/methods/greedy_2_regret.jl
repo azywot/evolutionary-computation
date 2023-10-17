@@ -9,27 +9,26 @@ returns: the 2-regret of inserting the node
 """
 function calculate_2regret(total_cost_matrix, current_solution, new_node, weight)
     n = length(current_solution)
-    cost =
-        total_cost_matrix[current_solution[end], new_node] +
-        total_cost_matrix[new_node, current_solution[1]] -
-        total_cost_matrix[current_solution[end], current_solution[1]]
-    best_insertion = cost
-    second_best_insertion = 1000000
-    best_insertion_position = n + 1
+    cost = Inf
+    best_insertion = Inf
+    second_best_insertion = Inf
+    best_insertion_position = 1
 
     if n == 1
         return -(1 - weight) * total_cost_matrix[current_solution[1], new_node], 2
     end
 
-    for i = 2:n
+    for i = 1:n
+        prev_vertex = current_solution[i]
+        next_vertex = current_solution[mod(i, n)+1]
         cost =
-            total_cost_matrix[current_solution[i-1], new_node] +
-            total_cost_matrix[new_node, current_solution[i]] -
-            total_cost_matrix[current_solution[i-1], current_solution[i]]
+            total_cost_matrix[prev_vertex, new_node] +
+            total_cost_matrix[new_node, next_vertex] -
+            total_cost_matrix[prev_vertex, next_vertex]
         if cost < best_insertion
             second_best_insertion = best_insertion
             best_insertion = cost
-            best_insertion_position = i
+            best_insertion_position = i + 1
         elseif cost < second_best_insertion
             second_best_insertion = cost
         end
