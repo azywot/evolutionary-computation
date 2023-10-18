@@ -33,9 +33,7 @@ function calculate_2regret(total_cost_matrix, current_solution, new_node, weight
             second_best_insertion = cost
         end
     end
-
-    regret = best_insertion - second_best_insertion
-    # TODO: ensure it's good: weight * regret - (1-weight) * best_insertion == 2 * weight * second_best_insertion -> does it make sense?
+    regret = second_best_insertion - best_insertion
     return weight * regret - (1 - weight) * best_insertion, best_insertion_position
 end
 
