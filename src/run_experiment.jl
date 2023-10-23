@@ -32,3 +32,9 @@ for letter in ["A", "B", "C", "D"]
         )
     end
 end
+
+
+
+# TODO: create a small instance
+distance_matrix, cost_vector, coords = read_data("data/TSPA.csv")
+local_greedy_search(100, random_solution(200, 1, distance_matrix, cost_vector), distance_matrix, cost_vector, "node")
