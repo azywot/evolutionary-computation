@@ -15,12 +15,16 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
 
     N = length(cost_vector)
     values = []
+    times = []
 
     best_solution = nothing
     best_cost = 1000000
 
     for i = 1:iter
-        permutation = method(N, i, distance_matrix, cost_vector)
+        time = @elapsed begin
+            permutation = method(N, i, distance_matrix, cost_vector)
+        end
+        push!(times, time)
         cost = evaluate_solution(permutation, distance_matrix, cost_vector)
         push!(values, cost)
 
@@ -38,8 +42,15 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     stats_file_path = joinpath(dir_path, "$filename" * "stats.csv")
 
     stats = DataFrame(
-        stat = ["mean", "min", "max"],
-        value = [mean(values), minimum(values), maximum(values)],
+        stat = ["mean", "min", "max", "time_mean", "time_min", "time_max"],
+        value = [
+            mean(values),
+            minimum(values),
+            maximum(values),
+            mean(times),
+            minimum(times),
+            maximum(times),
+        ],
     )
 
     if !isdir(dir_path)
