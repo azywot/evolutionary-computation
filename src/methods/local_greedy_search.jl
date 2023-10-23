@@ -2,14 +2,13 @@ using Random
 
 """
 Generate an intra route solution.
-- `solution::Vector{Int}`: initial solution
-- `solution_cost::Int`: cost of the initial solution
+- `solution::Vector{Int}`: solution
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `mode::String`: mode of the local search, either "node" or "edge"
 
 returns: a local search solution and its delta
 """
-function choose_intra_route_move(solution, solution_cost, distance_matrix, mode)
+function choose_intra_route_move(solution, distance_matrix, mode)
     n = length(solution)
     solution = deepcopy(solution)
 
@@ -33,7 +32,7 @@ function choose_intra_route_move(solution, solution_cost, distance_matrix, mode)
         positive_ingredient_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
         positive_ingredient_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2+1, n)+1]]
 
-        delta = solution_cost - negative_ingredient_node_1 - negative_ingredient_node_2 + positive_ingredient_node_1 + positive_ingredient_node_2
+        delta = - negative_ingredient_node_1 - negative_ingredient_node_2 + positive_ingredient_node_1 + positive_ingredient_node_2
         
         return solution, delta
     else # edge mode
@@ -43,21 +42,20 @@ function choose_intra_route_move(solution, solution_cost, distance_matrix, mode)
         negative_ingredient = distance_matrix[solution[idx1], solution[idx+1]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
         positive_ingredient = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx+1], solution[mod(idx2+1, n)+1]]
 
-        delta = solution_cost - negative_ingredient + positive_ingredient
+        delta = - negative_ingredient + positive_ingredient
         return solution, delta
     end
 end
 
 """
 Generate an inter route solution.
-- `solution::Vector{Int}`: initial solution
-- `solution_cost::Int`: cost of the initial solution
+- `solution::Vector{Int}`: solution
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
 
 returns: a local search solution and its delta
 """
-function choose_inter_route_move(solution, solution_cost, distance_matrix, cost_vector)
+function choose_inter_route_move(solution, distance_matrix, cost_vector)
     n = length(solution)
     solution = deepcopy(solution)
     N, _ = size(distance_matrix)
@@ -72,10 +70,10 @@ function choose_inter_route_move(solution, solution_cost, distance_matrix, cost_
     solution[substitute_idx] = candidate
 
     # calculate just delta
-    negative_ingredient = cost_vector[substitute_idx] + distance_matrix[solution[mod(substitute_idx-1, n)+1], substitute] + distance_matrix[substitute, solution[mod(substitute_idx+1, n)+1]]
-    positive_ingredient = cost_vector[candidate_idx] + distance_matrix[solution[mod(substitute_idx-1, n)+1], candidate] + distance_matrix[candidate, solution[mod(substitute_idx+1, n)+1]]
+    negative_ingredient = cost_vector[substitute] + distance_matrix[solution[mod(substitute-1, n)+1], substitute] + distance_matrix[substitute, solution[mod(substitute+1, n)+1]]
+    positive_ingredient = cost_vector[candidate] + distance_matrix[solution[mod(substitute-1, n)+1], candidate] + distance_matrix[candidate, solution[mod(substitute+1, n)+1]]
     
-    delta = solution_cost - negative_ingredient + positive_ingredient
+    delta = - negative_ingredient + positive_ingredient
     return solution, delta
 end
 
@@ -104,12 +102,13 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
         delta = 1000000
         counter = 0
 
-        while delta > 0 #&& counter < 200
+        while delta > 0 && counter < 200
             p = rand()
+            println("p: ", p)
             if p < 0.5
-                new_solution, delta = choose_intra_route_move(best_solution, best_cost, distance_matrix, mode)
+                new_solution, delta = choose_intra_route_move(best_solution, distance_matrix, mode)
             else
-                new_solution, delta = choose_inter_route_move(best_solution, best_cost, distance_matrix, cost_vector)
+                new_solution, delta = choose_inter_route_move(best_solution, distance_matrix, cost_vector)
             end
 
             if delta < 0
@@ -118,7 +117,7 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
             end
             counter += 1 # prevent infinite loop
         end
-        println("Best cost: ", best_cost, delta)
+        println("Best cost: ", best_cost, " delta: ", delta)
     end
     return best_solution, best_cost
 end

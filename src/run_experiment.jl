@@ -35,6 +35,7 @@ end
 
 
 
-# TODO: create a small instance
+# TODO: there's a bug in the local search, will investigate it but just wanted to share what ive done :D
+# create a small instance of a problem
 distance_matrix, cost_vector, coords = read_data("data/TSPA.csv")
-local_greedy_search(100, random_solution(200, 1, distance_matrix, cost_vector), distance_matrix, cost_vector, "node")
+local_greedy_search(200, random_solution(200, 1, distance_matrix, cost_vector), distance_matrix, cost_vector, "node")
