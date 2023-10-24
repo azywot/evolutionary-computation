@@ -35,12 +35,12 @@ end
 
 
 
-# TODO: there's a bug in the local search, will investigate it but just wanted to share what ive done :D
-# create a small instance of a problem
-distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
-random_sol = random_solution(200, 1, distance_matrix, cost_vector)
+# TODO: there's a bug in the local search
+distance_matrix, cost_vector, coords = read_data("data/TSPX.csv", true)
+instance_sol = [1, 2, 7, 4, 5, 6, 3, 8, 9]
+instance_sol2 = [1, 2, 3, 4, 5, 6, 7, 8, 9] # optimal solution with cost 36
 
-lg_solution, lg_cost = local_steepest_search(10, random_sol, distance_matrix, cost_vector, "node")
+lg_solution, lg_cost = local_steepest_search(10, instance_sol2, distance_matrix, cost_vector, "node")
 lg_evaluated = evaluate_solution(lg_solution, distance_matrix, cost_vector)
 println("Local greedy cost calculated: ", lg_cost)
 println("Local greedy cost evaluated: ", lg_evaluated)

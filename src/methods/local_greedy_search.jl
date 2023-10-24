@@ -171,19 +171,19 @@ function local_steepest_search(iterations, solution, distance_matrix, cost_vecto
         end
 
         # all inter-route moves
-        unvisited = setdiff(Set(1:N), Set(best_solution))
-        unvisited = collect(unvisited)
+        # unvisited = setdiff(Set(1:N), Set(best_solution))
+        # unvisited = collect(unvisited)
 
-        for i in 1:length(best_solution)
-            for candidate_node in unvisited
-                indices = [candidate_node, i] # insert candidate_node in position i
-                new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
-                if delta < best_delta
-                    best_solution_found = deepcopy(new_solution)
-                    best_delta = delta
-                end
-            end
-        end
+        # for i in 1:length(best_solution)
+        #     for candidate_node in unvisited
+        #         indices = [candidate_node, i] # insert candidate_node in position i
+        #         new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
+        #         if delta < best_delta
+        #             best_solution_found = deepcopy(new_solution)
+        #             best_delta = delta
+        #         end
+        #     end
+        # end
 
         if best_delta < 0
             best_solution = deepcopy(best_solution_found)
