@@ -15,16 +15,31 @@ function generate_intra_route_move(solution, distance_matrix, indices, mode)
     idx1, idx2 = indices[1], indices[2]
 
     if mode == "node"
-        solution[idx1], solution[idx2] = solution[idx2], solution[idx1]
+        positive_flow_adjacency = 0
+        if mod(idx1 + 1, n) == mod(idx2, n) || mod(idx2 + 1, n) == mod(idx1, n) # edge case
+            positive_flow_adjacency = distance_matrix[solution[idx1], solution[idx2]]
+        end
+        # println("INDICES", indices)
+        # print("positive_flow_adjacency: ", positive_flow_adjacency)
 
         # calculate just delta, not the whole cost of the solution (see: slides 90-91)
-        negative_flow_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx1]] + distance_matrix[solution[idx1], solution[idx1+1]]
-        negative_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx2]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
-        positive_flow_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
-        positive_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2+1, n)+1]]
+        negative_flow_node_1 = distance_matrix[solution[mod(idx1-2, n)+1], solution[idx1]] + distance_matrix[solution[idx1], solution[idx1+1]]
+        # println("negative_flow_node_1: ", distance_matrix[solution[mod(idx1-2, n)+1], solution[idx1]], " ; ", distance_matrix[solution[idx1], solution[idx1+1]])
 
-        delta = - negative_flow_node_1 - negative_flow_node_2 + positive_flow_node_1 + positive_flow_node_2
+        negative_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx2]] + distance_matrix[solution[idx2], solution[mod(idx2, n)+1]]
+        # println("negative_flow_node_2: ", distance_matrix[solution[idx2-1], solution[idx2]], " ; ",distance_matrix[solution[idx2], solution[mod(idx2, n)+1]])
+
+        positive_flow_node_1 = distance_matrix[solution[mod(idx1-2, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
+        # println("positive_flow_node_1: ", distance_matrix[solution[mod(idx1-2, n)+1], solution[idx2]], " ; ",distance_matrix[solution[idx2], solution[idx1+1]])
+
+        positive_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2, n)+1]]
+        # println("positive_flow_node_2: ", distance_matrix[solution[idx2-1], solution[idx1]], " ; ", distance_matrix[solution[idx1], solution[mod(idx2, n)+1]])
+
+        # println("negative_flow_node_1: ", negative_flow_node_1, "; negative_flow_node_2: ", negative_flow_node_2, "; positive_flow_node_1: ", positive_flow_node_1, "; positive_flow_node_2: ", positive_flow_node_2)
+
+        delta = positive_flow_node_1 + positive_flow_node_2 + positive_flow_adjacency- negative_flow_node_1 - negative_flow_node_2
         
+        solution[idx1], solution[idx2] = solution[idx2], solution[idx1]
         return solution, delta
 
     else # edge mode
@@ -32,8 +47,8 @@ function generate_intra_route_move(solution, distance_matrix, indices, mode)
         solution = solution[1:idx1] + reverse(solution[idx1+1:idx2]) + solution[mod(idx2+1, n)+1:end]
 
         # calculate just delta
-        negative_flow = distance_matrix[solution[idx1], solution[idx+1]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
-        positive_flow = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx+1], solution[mod(idx2+1, n)+1]]
+        negative_flow = distance_matrix[solution[idx1], solution[idx1+1]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
+        positive_flow = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx1+1], solution[mod(idx2+1, n)+1]]
 
         delta = - negative_flow + positive_flow
         return solution, delta
@@ -166,6 +181,7 @@ function local_steepest_search(iterations, solution, distance_matrix, cost_vecto
                 if delta < best_delta
                     best_solution_found = deepcopy(new_solution)
                     best_delta = delta
+                    println("new solution: ", best_solution, "; delta: ", best_delta, "; indices: ", indices)
                 end
             end
         end
@@ -190,6 +206,7 @@ function local_steepest_search(iterations, solution, distance_matrix, cost_vecto
             best_cost += best_delta
             println("Best cost: ", best_cost, " delta: ", best_delta)
         else
+            println("Local minimum reached")
             return best_solution, best_cost # local minimum reached
         end
     end

@@ -40,7 +40,7 @@ distance_matrix, cost_vector, coords = read_data("data/TSPX.csv", true)
 instance_sol = [1, 2, 7, 4, 5, 6, 3, 8, 9]
 instance_sol2 = [1, 2, 3, 4, 5, 6, 7, 8, 9] # optimal solution with cost 36
 
-lg_solution, lg_cost = local_steepest_search(10, instance_sol2, distance_matrix, cost_vector, "node")
+lg_solution, lg_cost = local_steepest_search(100, instance_sol, distance_matrix, cost_vector, "node")
 lg_evaluated = evaluate_solution(lg_solution, distance_matrix, cost_vector)
 println("Local greedy cost calculated: ", lg_cost)
 println("Local greedy cost evaluated: ", lg_evaluated)
@@ -51,7 +51,7 @@ if !isdir(dir_path)
     mkpath(dir_path)
 end
 
-best_solution_file_path = joinpath(dir_path, "TSPA_" * "best.csv")
+best_solution_file_path = joinpath(dir_path, "TSPX_" * "best.csv")
 CSV.write(
     best_solution_file_path,
     DataFrame(
@@ -63,7 +63,7 @@ CSV.write(
 
 
 generate_solution_graph(
-    "results/local_greedy_search/TSPA_best.csv",
+    "results/local_greedy_search/TSPX_best.csv",
     coords,
     cost_vector,
     "local_greedy_search",
