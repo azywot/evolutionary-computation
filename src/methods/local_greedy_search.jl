@@ -53,9 +53,7 @@ function generate_inter_route_move(solution, distance_matrix, cost_vector, indic
     n = length(solution)
     solution = deepcopy(solution)
 
-    candidate_idx = indices[1]
-    candidate = unvisited[candidate_idx]
-
+    candidate = indices[1]
     substitute_idx = indices[2]
     substitute = solution[substitute_idx]
     solution[substitute_idx] = candidate
@@ -82,10 +80,11 @@ returns: a local search solution and its cost
 """
 function local_greedy_search(iterations, solution, distance_matrix, cost_vector, mode)
     N, _ = size(distance_matrix)
-    distance_matrix = deepcopy(distance_matrix) # fix diagonal as now its 10000000 or sth
+    distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
+    println("Initial cost: ", best_cost)
 
     for i in 1:iterations
         println("Iteration: ", i)
@@ -95,37 +94,41 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
 
         while delta > 0 && counter < 200
             p = rand()
-            println("p: ", p)
-            if p < 0.5
-                # intra-route; change edge or node withing best_solution
+            # println("p: ", p)
+            if p <= 2 # generate_intra_route_move with "node" mode
+                # intra-route; change edge or node within best_solution
                 indices = []
                 while length(indices) < 2
-                    idx1 = rand(1:length(solution))
-                    idx2 = rand(1:length(solution))
+                    idx1 = rand(1:length(best_solution))
+                    idx2 = rand(1:length(best_solution))
                     if idx1 < idx2
                         push!(indices, idx1)
                         push!(indices, idx2)
                     end
                 end
                 new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
+                println(best_cost)
             else
                 # inter-route; change node from best_solution with a node from unvisited
-                unvisited = setdiff(Set(1:N), Set(solution))
+                unvisited = setdiff(Set(1:N), Set(best_solution))
                 unvisited = collect(unvisited)
 
                 candidate_idx = rand(1:length(unvisited))
-                substitute_idx = rand(1:length(solution))
-                indices = [candidate_idx, substitute_idx]
+                substitute_idx = rand(1:length(best_solution))
+                candidate = unvisited[candidate_idx]
+                indices = [candidate, substitute_idx]
                 new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
             end
 
             if delta < 0
                 best_solution = deepcopy(new_solution)
+                println("Old best cost: ", best_cost, "; delta: ", delta, "; old best cost evalueated: ", evaluate_solution(best_solution, distance_matrix, cost_vector))
                 best_cost += delta
+                println("New best cost: ", best_cost, "; new best cost evalueated: ", evaluate_solution(best_solution, distance_matrix, cost_vector))
+                println("Best cost: ", best_cost, " delta: ", delta)
             end
             counter += 1 # prevent infinite loop
         end
-        println("Best cost: ", best_cost, " delta: ", delta)
     end
     return best_solution, best_cost
 end
@@ -144,5 +147,4 @@ returns: a local search solution and its cost
 """
 function local_steepest_search()
     # TODO: by analogy with local_greedy_search
-    ...
 end

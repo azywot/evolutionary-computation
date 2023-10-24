@@ -37,5 +37,34 @@ end
 
 # TODO: there's a bug in the local search, will investigate it but just wanted to share what ive done :D
 # create a small instance of a problem
-distance_matrix, cost_vector, coords = read_data("data/TSPA.csv")
-local_greedy_search(200, random_solution(200, 1, distance_matrix, cost_vector), distance_matrix, cost_vector, "node")
+distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
+random_sol = random_solution(200, 1, distance_matrix, cost_vector)
+
+lg_solution, lg_cost = local_greedy_search(10, random_sol, distance_matrix, cost_vector, "node")
+lg_evaluated = evaluate_solution(lg_solution, distance_matrix, cost_vector)
+println("Local greedy cost calculated: ", lg_cost)
+println("Local greedy cost evaluated: ", lg_evaluated)
+
+# now's ugly
+dir_path = "results/local_greedy_search"
+if !isdir(dir_path)
+    mkpath(dir_path)
+end
+
+best_solution_file_path = joinpath(dir_path, "TSPA_" * "best.csv")
+CSV.write(
+    best_solution_file_path,
+    DataFrame(
+        x = [coords[i][1] for i in lg_solution],
+        y = [coords[i][2] for i in lg_solution],
+        cost = [cost_vector[i] for i in lg_solution],
+    ),
+)
+
+
+generate_solution_graph(
+    "results/local_greedy_search/TSPA_best.csv",
+    coords,
+    cost_vector,
+    "local_greedy_search",
+)
