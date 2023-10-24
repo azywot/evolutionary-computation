@@ -40,7 +40,7 @@ end
 distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
 random_sol = random_solution(200, 1, distance_matrix, cost_vector)
 
-lg_solution, lg_cost = local_greedy_search(10, random_sol, distance_matrix, cost_vector, "node")
+lg_solution, lg_cost = local_steepest_search(10, random_sol, distance_matrix, cost_vector, "node")
 lg_evaluated = evaluate_solution(lg_solution, distance_matrix, cost_vector)
 println("Local greedy cost calculated: ", lg_cost)
 println("Local greedy cost evaluated: ", lg_evaluated)

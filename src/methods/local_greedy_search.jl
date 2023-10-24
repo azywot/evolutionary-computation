@@ -79,6 +79,7 @@ Generate a local search greedy solution given a starting solution and a mode.
 returns: a local search solution and its cost
 """
 function local_greedy_search(iterations, solution, distance_matrix, cost_vector, mode)
+
     N, _ = size(distance_matrix)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
@@ -95,7 +96,7 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
         while delta > 0 && counter < 200
             p = rand()
             # println("p: ", p)
-            if p <= 2 # generate_intra_route_move with "node" mode
+            if p < 0.5
                 # intra-route; change edge or node within best_solution
                 indices = []
                 while length(indices) < 2
@@ -107,7 +108,6 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                     end
                 end
                 new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
-                println(best_cost)
             else
                 # inter-route; change node from best_solution with a node from unvisited
                 unvisited = setdiff(Set(1:N), Set(best_solution))
@@ -124,10 +124,9 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                 best_solution = deepcopy(new_solution)
                 println("Old best cost: ", best_cost, "; delta: ", delta, "; old best cost evalueated: ", evaluate_solution(best_solution, distance_matrix, cost_vector))
                 best_cost += delta
-                println("New best cost: ", best_cost, "; new best cost evalueated: ", evaluate_solution(best_solution, distance_matrix, cost_vector))
-                println("Best cost: ", best_cost, " delta: ", delta)
+                println("New best cost: ", best_cost, "; delta: ", delta, "; new best cost evalueated: ", evaluate_solution(best_solution, distance_matrix, cost_vector))
             end
-            counter += 1 # prevent infinite loop
+            counter += 1 # prevent infinite loop; TODO: clarify this
         end
     end
     return best_solution, best_cost
@@ -145,6 +144,54 @@ Generate a local search steepest solution given a starting solution and a mode.
 
 returns: a local search solution and its cost
 """
-function local_steepest_search()
-    # TODO: by analogy with local_greedy_search
+function local_steepest_search(iterations, solution, distance_matrix, cost_vector, mode)
+
+    N, _ = size(distance_matrix)
+    distance_matrix = deepcopy(distance_matrix)
+    cost_vector = deepcopy(cost_vector)
+    best_solution = deepcopy(solution)
+    best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
+    println("Initial cost: ", best_cost)
+
+    for i in 1:iterations
+        println("Iteration: ", i)
+        best_delta = 1000000
+        best_solution_found = nothing
+
+        # all intra-route moves
+        for idx1 in 1:length(best_solution)
+            for idx2 in idx1+1:length(best_solution)
+                indices = [idx1, idx2]
+                new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
+                if delta < best_delta
+                    best_solution_found = deepcopy(new_solution)
+                    best_delta = delta
+                end
+            end
+        end
+
+        # all inter-route moves
+        unvisited = setdiff(Set(1:N), Set(best_solution))
+        unvisited = collect(unvisited)
+
+        for i in 1:length(best_solution)
+            for candidate_node in unvisited
+                indices = [candidate_node, i] # insert candidate_node in position i
+                new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
+                if delta < best_delta
+                    best_solution_found = deepcopy(new_solution)
+                    best_delta = delta
+                end
+            end
+        end
+
+        if best_delta < 0
+            best_solution = deepcopy(best_solution_found)
+            best_cost += best_delta
+            println("Best cost: ", best_cost, " delta: ", best_delta)
+        else
+            return best_solution, best_cost # local minimum reached
+        end
+    end
+    return best_solution, best_cost
 end
