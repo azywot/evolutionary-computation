@@ -9,7 +9,7 @@ Generate an intra route solution.
 
 returns: a local search solution and its delta
 """
-function choose_intra_route_move(solution, distance_matrix, indices, mode)
+function generate_intra_route_move(solution, distance_matrix, indices, mode)
     n = length(solution)
     solution = deepcopy(solution)
     idx1, idx2 = indices[1], indices[2]
@@ -18,12 +18,12 @@ function choose_intra_route_move(solution, distance_matrix, indices, mode)
         solution[idx1], solution[idx2] = solution[idx2], solution[idx1]
 
         # calculate just delta, not the whole cost of the solution (see: slides 90-91)
-        negative_ingredient_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx1]] + distance_matrix[solution[idx1], solution[idx1+1]]
-        negative_ingredient_node_2 = distance_matrix[solution[idx2-1], solution[idx2]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
-        positive_ingredient_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
-        positive_ingredient_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2+1, n)+1]]
+        negative_flow_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx1]] + distance_matrix[solution[idx1], solution[idx1+1]]
+        negative_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx2]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
+        positive_flow_node_1 = distance_matrix[solution[mod(idx1-1, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
+        positive_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2+1, n)+1]]
 
-        delta = - negative_ingredient_node_1 - negative_ingredient_node_2 + positive_ingredient_node_1 + positive_ingredient_node_2
+        delta = - negative_flow_node_1 - negative_flow_node_2 + positive_flow_node_1 + positive_flow_node_2
         
         return solution, delta
 
@@ -32,10 +32,10 @@ function choose_intra_route_move(solution, distance_matrix, indices, mode)
         solution = solution[1:idx1] + reverse(solution[idx1+1:idx2]) + solution[mod(idx2+1, n)+1:end]
 
         # calculate just delta
-        negative_ingredient = distance_matrix[solution[idx1], solution[idx+1]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
-        positive_ingredient = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx+1], solution[mod(idx2+1, n)+1]]
+        negative_flow = distance_matrix[solution[idx1], solution[idx+1]] + distance_matrix[solution[idx2], solution[mod(idx2+1, n)+1]]
+        positive_flow = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx+1], solution[mod(idx2+1, n)+1]]
 
-        delta = - negative_ingredient + positive_ingredient
+        delta = - negative_flow + positive_flow
         return solution, delta
     end
 end
@@ -49,7 +49,7 @@ Generate an inter route solution.
 
 returns: a local search solution and its delta
 """
-function choose_inter_route_move(solution, distance_matrix, cost_vector, indices)
+function generate_inter_route_move(solution, distance_matrix, cost_vector, indices)
     n = length(solution)
     solution = deepcopy(solution)
 
@@ -61,10 +61,10 @@ function choose_inter_route_move(solution, distance_matrix, cost_vector, indices
     solution[substitute_idx] = candidate
 
     # calculate just delta
-    negative_ingredient = cost_vector[substitute] + distance_matrix[solution[mod(substitute-1, n)+1], substitute] + distance_matrix[substitute, solution[mod(substitute+1, n)+1]]
-    positive_ingredient = cost_vector[candidate] + distance_matrix[solution[mod(substitute-1, n)+1], candidate] + distance_matrix[candidate, solution[mod(substitute+1, n)+1]]
+    negative_flow = cost_vector[substitute] + distance_matrix[solution[mod(substitute-1, n)+1], substitute] + distance_matrix[substitute, solution[mod(substitute+1, n)+1]]
+    positive_flow = cost_vector[candidate] + distance_matrix[solution[mod(substitute-1, n)+1], candidate] + distance_matrix[candidate, solution[mod(substitute+1, n)+1]]
     
-    delta = - negative_ingredient + positive_ingredient
+    delta = - negative_flow + positive_flow
     return solution, delta
 end
 
@@ -107,7 +107,7 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                         push!(indices, idx2)
                     end
                 end
-                new_solution, delta = choose_intra_route_move(best_solution, distance_matrix, indices, mode)
+                new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
             else
                 # inter-route; change node from best_solution with a node from unvisited
                 unvisited = setdiff(Set(1:N), Set(solution))
@@ -116,7 +116,7 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                 candidate_idx = rand(1:length(unvisited))
                 substitute_idx = rand(1:length(solution))
                 indices = [candidate_idx, substitute_idx]
-                new_solution, delta = choose_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
+                new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
             end
 
             if delta < 0
