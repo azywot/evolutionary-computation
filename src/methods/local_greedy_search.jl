@@ -21,31 +21,23 @@ function generate_intra_route_move(solution, dm, indices, mode)
         minus_i = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[i], sol[i+1]]
         minus_j = dm[sol[j-1], sol[j]] + dm[sol[j], sol[mod(j, n)+1]]
 
-        # println("plus_i ", plus_i)
-        # println("plus_j ", plus_j)
-        # println("minus_i ", minus_i)
-        # println("minus_j ", minus_j)
-        # println("-----------------------------")
         delta = plus_i + plus_j - minus_i - minus_j
         sol[i], sol[j] = sol[j], sol[i]
 
-        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n) # edge case
+        # if nodes are already connected by edge
+        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n)
             delta += 2 * dm[sol[i], sol[j]]
         end
     elseif mode == "edge"
-        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n) # edge case
-            return solution, 0 # no change here
+        # if nodes are already connected by edge
+        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n)
+            return sol, 0
         end
-        # calculate just delta
-        negative_flow =
-            distance_matrix[solution[i], solution[i+1]] +
-            distance_matrix[solution[j], solution[mod(j, n)+1]]
-        positive_flow =
-            distance_matrix[solution[i], solution[j]] +
-            distance_matrix[solution[i+1], solution[mod(j, n)+1]]
+        plus = dm[sol[i], sol[j]] + dm[sol[i+1], sol[mod(j, n)+1]]
+        minus = dm[sol[i], sol[i+1]] + dm[sol[j], sol[mod(j, n)+1]]
 
-        delta = -negative_flow + positive_flow
-        solution = vcat(solution[1:i], reverse(solution[i+1:j]), solution[mod(j, n)+1:end])
+        delta = plus - minus
+        sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[mod(j, n)+1:end])
 
     end
     return sol, delta
@@ -190,7 +182,7 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
                 best_delta = delta
             end
         end
-        # println("new solution: ", best_solution, "; delta: ", best_delta)#, "; indices: ", indices)
+        println("new solution: ", best_solution, "; delta: ", best_delta)
 
         # all inter-route moves
         # unvisited = setdiff(Set(1:N), Set(best_solution))
