@@ -1,62 +1,54 @@
+using Combinatorics
 using Random
 
 """
 Generate an intra route solution.
 - `solution::Vector{Int}`: solution
-- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `dm::Matrix{Int}`: matrix of distances between nodes
 - `indices::Vector{Int}`: indices of nodes to be swapped (either the nodes or its edges)
 - `mode::String`: mode of the local search, either "node" or "edge"
 
 returns: a local search solution and its delta
 """
-function generate_intra_route_move(solution, distance_matrix, indices, mode)
+function generate_intra_route_move(solution, dm, indices, mode)
     n = length(solution)
-    solution = deepcopy(solution)
-    idx1, idx2 = indices[1], indices[2]
+    sol = deepcopy(solution)
+    i, j = indices[1], indices[2]
 
     if mode == "node"
+        plus_i = dm[sol[j-1], sol[i]] + dm[sol[i], sol[mod(j, n)+1]]
+        plus_j = dm[sol[mod(i - 2, n)+1], sol[j]] + dm[sol[j], sol[i+1]]
+        minus_i = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[i], sol[i+1]]
+        minus_j = dm[sol[j-1], sol[j]] + dm[sol[j], sol[mod(j, n)+1]]
 
-        # calculate just delta, not the whole cost of the solution (see: slides 90-91)
-        # TODO: check if this is correct, remove comments 
-        negative_flow_node_1 = distance_matrix[solution[mod(idx1-2, n)+1], solution[idx1]] + distance_matrix[solution[idx1], solution[idx1+1]]
-        # println("negative_flow_node_1: ", distance_matrix[solution[mod(idx1-2, n)+1], solution[idx1]], " ; ", distance_matrix[solution[idx1], solution[idx1+1]])
+        # println("plus_i ", plus_i)
+        # println("plus_j ", plus_j)
+        # println("minus_i ", minus_i)
+        # println("minus_j ", minus_j)
+        # println("-----------------------------")
+        delta = plus_i + plus_j - minus_i - minus_j
+        sol[i], sol[j] = sol[j], sol[i]
 
-        negative_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx2]] + distance_matrix[solution[idx2], solution[mod(idx2, n)+1]]
-        # println("negative_flow_node_2: ", distance_matrix[solution[idx2-1], solution[idx2]], " ; ",distance_matrix[solution[idx2], solution[mod(idx2, n)+1]])
-
-        positive_flow_node_1 = distance_matrix[solution[mod(idx1-2, n)+1], solution[idx2]] + distance_matrix[solution[idx2], solution[idx1+1]]
-        # println("positive_flow_node_1: ", distance_matrix[solution[mod(idx1-2, n)+1], solution[idx2]], " ; ",distance_matrix[solution[idx2], solution[idx1+1]])
-
-        positive_flow_node_2 = distance_matrix[solution[idx2-1], solution[idx1]] + distance_matrix[solution[idx1], solution[mod(idx2, n)+1]]
-        # println("positive_flow_node_2: ", distance_matrix[solution[idx2-1], solution[idx1]], " ; ", distance_matrix[solution[idx1], solution[mod(idx2, n)+1]])
-
-        # println("negative_flow_node_1: ", negative_flow_node_1, "; negative_flow_node_2: ", negative_flow_node_2, "; positive_flow_node_1: ", positive_flow_node_1, "; positive_flow_node_2: ", positive_flow_node_2)
-
-        delta = 0
-        if mod(idx1 + 1, n) == mod(idx2, n) || mod(idx2 + 1, n) == mod(idx1, n) # edge case
-            delta = distance_matrix[solution[idx1], solution[idx2]]
-            # println("INDICES", indices)
-            # print("positive_flow (adjacent nodes): ", delta)
+        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n) # edge case
+            delta += 2 * dm[sol[i], sol[j]]
         end
-
-        delta += positive_flow_node_1 + positive_flow_node_2 - negative_flow_node_1 - negative_flow_node_2
-        solution[idx1], solution[idx2] = solution[idx2], solution[idx1]
-
-        return solution, delta
-
-    else # "edge" mode
-        if mod(idx1 + 1, n) == mod(idx2, n) || mod(idx2 + 1, n) == mod(idx1, n) # edge case
+    elseif mode == "edge"
+        if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n) # edge case
             return solution, 0 # no change here
         end
         # calculate just delta
-        negative_flow = distance_matrix[solution[idx1], solution[idx1+1]] + distance_matrix[solution[idx2], solution[mod(idx2, n)+1]]
-        positive_flow = distance_matrix[solution[idx1], solution[idx2]] + distance_matrix[solution[idx1+1], solution[mod(idx2, n)+1]]
+        negative_flow =
+            distance_matrix[solution[i], solution[i+1]] +
+            distance_matrix[solution[j], solution[mod(j, n)+1]]
+        positive_flow =
+            distance_matrix[solution[i], solution[j]] +
+            distance_matrix[solution[i+1], solution[mod(j, n)+1]]
 
-        delta = - negative_flow + positive_flow
-        solution = vcat(solution[1:idx1], reverse(solution[idx1+1:idx2]), solution[mod(idx2, n)+1:end])
+        delta = -negative_flow + positive_flow
+        solution = vcat(solution[1:i], reverse(solution[i+1:j]), solution[mod(j, n)+1:end])
 
-        return solution, delta
     end
+    return sol, delta
 end
 
 """
@@ -77,10 +69,16 @@ function generate_inter_route_move(solution, distance_matrix, cost_vector, indic
     substitute = solution[substitute_idx]
 
     # calculate just delta
-    negative_flow = cost_vector[substitute] + distance_matrix[solution[mod(substitute-2, n)+1], substitute] + distance_matrix[substitute, solution[mod(substitute, n)+1]]
-    positive_flow = cost_vector[candidate] + distance_matrix[solution[mod(substitute-2, n)+1], candidate] + distance_matrix[candidate, solution[mod(substitute, n)+1]]
-    
-    delta = - negative_flow + positive_flow
+    negative_flow =
+        cost_vector[substitute] +
+        distance_matrix[solution[mod(substitute - 2, n)+1], substitute] +
+        distance_matrix[substitute, solution[mod(substitute, n)+1]]
+    positive_flow =
+        cost_vector[candidate] +
+        distance_matrix[solution[mod(substitute - 2, n)+1], candidate] +
+        distance_matrix[candidate, solution[mod(substitute, n)+1]]
+
+    delta = -negative_flow + positive_flow
     solution[substitute_idx] = candidate
 
     return solution, delta
@@ -107,7 +105,7 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
     println("Initial cost: ", best_cost)
 
-    for i in 1:iterations
+    for i = 1:iterations
         println("Iteration: ", i)
         new_solution = nothing
         delta = 1000000
@@ -119,14 +117,15 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                 # intra-route; change edge or node within best_solution
                 indices = []
                 while length(indices) < 2
-                    idx1 = rand(1:length(best_solution))
-                    idx2 = rand(1:length(best_solution))
-                    if idx1 < idx2
-                        push!(indices, idx1)
-                        push!(indices, idx2)
+                    i = rand(1:length(best_solution))
+                    j = rand(1:length(best_solution))
+                    if i < j
+                        push!(indices, i)
+                        push!(indices, j)
                     end
                 end
-                new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
+                new_solution, delta =
+                    generate_intra_route_move(best_solution, distance_matrix, indices, mode)
             else
                 # inter-route; change node from best_solution with a node from unvisited
                 unvisited = setdiff(Set(1:N), Set(best_solution))
@@ -136,7 +135,12 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
                 substitute_idx = rand(1:length(best_solution))
                 candidate = unvisited[candidate_idx]
                 indices = [candidate, substitute_idx] # insert candidate in position substitute_idx
-                new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
+                new_solution, delta = generate_inter_route_move(
+                    best_solution,
+                    distance_matrix,
+                    cost_vector,
+                    indices,
+                )
             end
 
             if delta < 0
@@ -162,56 +166,53 @@ Generate a local search steepest solution given a starting solution and a mode.
 
 returns: a local search solution and its cost
 """
-function local_steepest_search(iterations, solution, distance_matrix, cost_vector, mode)
+function local_steepest_search(solution, distance_matrix, cost_vector, mode)
 
     N, _ = size(distance_matrix)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
+    total_cost_matrix = distance_matrix .+ transpose(cost_vector)
     best_solution = deepcopy(solution)
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
     println("Initial cost: ", best_cost)
 
-    for i in 1:iterations
-        println("Iteration: ", i)
-        best_delta = 1000000
+    node_pairs = collect(Combinatorics.combinations(1:length(solution), 2))
+    best_delta = -1
+    while best_delta < 0
+        best_delta = 0
         best_solution_found = nothing
 
-        # all intra-route moves
-        for idx1 in 1:length(best_solution)
-            for idx2 in idx1+1:length(best_solution)
-                indices = [idx1, idx2]
-                new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
-                if delta < best_delta
-                    best_solution_found = deepcopy(new_solution)
-                    best_delta = delta
-                    # println("new solution: ", best_solution, "; delta: ", best_delta, "; indices: ", indices)
-                end
+        for indices in node_pairs
+            new_solution, delta =
+                generate_intra_route_move(best_solution, total_cost_matrix, indices, mode)
+            if delta < best_delta
+                best_solution_found = deepcopy(new_solution)
+                best_delta = delta
             end
         end
+        # println("new solution: ", best_solution, "; delta: ", best_delta)#, "; indices: ", indices)
 
         # all inter-route moves
-        unvisited = setdiff(Set(1:N), Set(best_solution))
-        unvisited = collect(unvisited)
+        # unvisited = setdiff(Set(1:N), Set(best_solution))
+        # unvisited = collect(unvisited)
 
-        for i in 1:length(best_solution)
-            for candidate_node in unvisited
-                indices = [candidate_node, i] # insert candidate_node in position i
-                new_solution, delta = generate_inter_route_move(best_solution, distance_matrix, cost_vector, indices)
-                if delta < best_delta
-                    best_solution_found = deepcopy(new_solution)
-                    best_delta = delta
-                end
-            end
-        end
+        # for i in 1:length(best_solution)
+        #     for candidate_node in unvisited
+        #         indices = [candidate_node, i] # insert candidate_node in position i
+        #         new_solution, delta = generate_inter_route_move(best_solution, total_cost_matrix, cost_vector, indices)
+        #         if delta < best_delta
+        #             best_solution_found = deepcopy(new_solution)
+        #             best_delta = delta
+        #         end
+        #     end
+        # end
 
         if best_delta < 0
             best_solution = deepcopy(best_solution_found)
             best_cost += best_delta
             println("Current best cost: ", best_cost, " delta: ", best_delta)
-        else
-            println("Local minimum reached")
-            return best_solution, best_cost # local minimum reached
         end
     end
+    println("Local minimum reached")
     return best_solution, best_cost
 end
