@@ -48,32 +48,29 @@ Generate an inter route solution.
 - `solution::Vector{Int}`: solution
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
-- `indices::Vector{Int}`: indices of nodes to be swapped
+- `new_node::Int`: number of node to be inserted
+- `idx::Int`: index at which new node will be inserted
 
 returns: a local search solution and its delta
 """
-function generate_inter_route_move(solution, distance_matrix, cost_vector, indices)
+function generate_inter_route_move(solution, dm, cost_vector, new_node, idx)
     n = length(solution)
-    solution = deepcopy(solution)
+    sol = deepcopy(solution)
+    old_node = solution[idx]
 
-    candidate = indices[1]
-    substitute_idx = indices[2]
-    substitute = solution[substitute_idx]
+    plus =
+        cost_vector[new_node] +
+        dm[sol[mod(idx - 2, n)+1], new_node] +
+        dm[new_node, sol[mod(idx, n)+1]]
+    minus =
+        cost_vector[old_node] +
+        dm[sol[mod(idx - 2, n)+1], old_node] +
+        dm[old_node, sol[mod(idx, n)+1]]
 
-    # calculate just delta
-    negative_flow =
-        cost_vector[substitute] +
-        distance_matrix[solution[mod(substitute - 2, n)+1], substitute] +
-        distance_matrix[substitute, solution[mod(substitute, n)+1]]
-    positive_flow =
-        cost_vector[candidate] +
-        distance_matrix[solution[mod(substitute - 2, n)+1], candidate] +
-        distance_matrix[candidate, solution[mod(substitute, n)+1]]
+    delta = plus - minus
+    sol[idx] = new_node
 
-    delta = -negative_flow + positive_flow
-    solution[substitute_idx] = candidate
-
-    return solution, delta
+    return sol, delta
 end
 
 
@@ -150,7 +147,6 @@ end
 
 """
 Generate a local search steepest solution given a starting solution and a mode.
-- `iterations::Int`: number of iterations
 - `solution::Vector{Int}`: initial solution
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
@@ -163,7 +159,6 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
     N, _ = size(distance_matrix)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
-    total_cost_matrix = distance_matrix .+ transpose(cost_vector)
     best_solution = deepcopy(solution)
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
     println("Initial cost: ", best_cost)
@@ -173,36 +168,37 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
     while best_delta < 0
         best_delta = 0
         best_solution_found = nothing
+        unvisited = collect(setdiff(Set(1:N), Set(best_solution)))
 
         for indices in node_pairs
             new_solution, delta =
-                generate_intra_route_move(best_solution, total_cost_matrix, indices, mode)
+                generate_intra_route_move(best_solution, distance_matrix, indices, mode)
             if delta < best_delta
                 best_solution_found = deepcopy(new_solution)
                 best_delta = delta
             end
         end
-        println("new solution: ", best_solution, "; delta: ", best_delta)
 
-        # all inter-route moves
-        # unvisited = setdiff(Set(1:N), Set(best_solution))
-        # unvisited = collect(unvisited)
-
-        # for i in 1:length(best_solution)
-        #     for candidate_node in unvisited
-        #         indices = [candidate_node, i] # insert candidate_node in position i
-        #         new_solution, delta = generate_inter_route_move(best_solution, total_cost_matrix, cost_vector, indices)
-        #         if delta < best_delta
-        #             best_solution_found = deepcopy(new_solution)
-        #             best_delta = delta
-        #         end
-        #     end
-        # end
+        for idx = 1:length(best_solution)
+            for candidate_node in unvisited
+                new_solution, delta = generate_inter_route_move(
+                    best_solution,
+                    distance_matrix,
+                    cost_vector,
+                    candidate_node,
+                    idx,
+                )
+                if delta < best_delta
+                    best_solution_found = deepcopy(new_solution)
+                    best_delta = delta
+                end
+            end
+        end
 
         if best_delta < 0
             best_solution = deepcopy(best_solution_found)
             best_cost += best_delta
-            println("Current best cost: ", best_cost, " delta: ", best_delta)
+            # println("Current best cost: ", best_cost, " delta: ", best_delta)
         end
     end
     println("Local minimum reached")
