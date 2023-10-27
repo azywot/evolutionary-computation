@@ -132,8 +132,8 @@ function local_greedy_search(solution, distance_matrix, cost_vector, mode)
             end
         end
     end
-    println("Local minimum reached")
-    return best_solution, best_cost
+    println("Local minimum reached with cost ", best_cost)
+    return best_solution
 end
 
 
@@ -193,6 +193,6 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
             # println("Current best cost: ", best_cost, " delta: ", best_delta)
         end
     end
-    println("Local minimum reached")
-    return best_solution, best_cost
+    println("Local minimum reached with cost ", best_cost)
+    return best_solution
 end

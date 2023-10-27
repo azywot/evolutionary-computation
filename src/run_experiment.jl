@@ -3,19 +3,6 @@ include("./methods/all_methods.jl")
 include("./generate_solutions.jl")
 include("./plots/solution_graph.jl")
 
-# =================================================================
-# GENERATE AND EVALUATE A SOLUTION:
-# filename = "data/TSPA.csv"
-# distance_matrix, cost_vector, coords = read_data(filename)
-# N = 200
-# solution_random = random_solution(N, 1, distance_matrix, cost_vector)
-# evaluate_solution(solution_random, distance_matrix, cost_vector)
-
-# solution_nn = nn_solution(N, 1, distance_matrix, cost_vector)
-# evaluate_solution(solution_nn, distance_matrix, cost_vector)
-
-# solution_greedy = greedy_cycle(N, 1, distance_matrix, cost_vector)
-# evaluate_solution(solution_greedy, distance_matrix, cost_vector)
 
 # =================================================================
 # PERFORM EXPERIMENTS FOR ALL PROBLEMS: 
@@ -35,8 +22,6 @@ include("./plots/solution_graph.jl")
 
 
 #  ======================= LOCAL SEARCH =======================
-# MOCK EXAMPLE FROM THE SLIDES
-# TODO: ensure it's good (especially the indices part)
 distance_matrix, cost_vector, coords = read_data("data/TSPX.csv", true)
 instance_sol1 = [1, 2, 7, 4, 5, 6, 3, 8, 9] # node mode - działa
 instance_sol2 = [1, 2, 6, 5, 4, 3, 7, 8, 9] # edge mode - działa
@@ -94,3 +79,44 @@ generate_solution_graph(
     cost_vector,
     "local_greedy_search",
 )
+
+
+for letter in ["A", "B", "C", "D"]
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    for start_method in [random_solution, greedy_2regret_heuristics]
+        for mode in ["edge", "node"]
+            for method in [local_steepest_search, local_greedy_search]
+                println(
+                    "Run parameters: TSP" *
+                    "$letter" *
+                    "$method"" " *
+                    "$start_method" *
+                    " " *
+                    "$mode",
+                )
+                evaluate_local_search(
+                    distance_matrix,
+                    cost_vector,
+                    coords,
+                    method,
+                    start_method,
+                    mode,
+                    10,
+                    filename,
+                )
+                generate_solution_graph(
+                    "results/$method/TSP$letter" *
+                    "_" *
+                    "$start_method" *
+                    "_" *
+                    "$mode" *
+                    "_best.csv",
+                    coords,
+                    cost_vector,
+                    "$method",
+                )
+            end
+        end
+    end
+end
