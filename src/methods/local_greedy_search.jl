@@ -92,7 +92,7 @@ function local_greedy_search(solution, distance_matrix, cost_vector, mode)
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
-    println("Initial cost: ", best_cost)
+    # println("Initial cost: ", best_cost)
 
     node_pairs = collect(Combinatorics.combinations(1:length(solution), 2))
     delta = -1
@@ -128,11 +128,10 @@ function local_greedy_search(solution, distance_matrix, cost_vector, mode)
             if delta < 0
                 best_solution = deepcopy(new_solution)
                 best_cost += delta
-                # println("Current best cost: ", best_cost, " delta: ", delta)
             end
         end
     end
-    println("Local minimum reached with cost ", best_cost)
+    # println("Local minimum reached with cost ", best_cost)
     return best_solution
 end
 
@@ -153,7 +152,7 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
-    println("Initial cost: ", best_cost)
+    # println("Initial cost: ", best_cost)
 
     node_pairs = collect(Combinatorics.combinations(1:length(solution), 2))
     best_delta = -1
@@ -190,9 +189,8 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
         if best_delta < 0
             best_solution = deepcopy(best_solution_found)
             best_cost += best_delta
-            # println("Current best cost: ", best_cost, " delta: ", best_delta)
         end
     end
-    println("Local minimum reached with cost ", best_cost)
+    # println("Local minimum reached with cost ", best_cost)
     return best_solution
 end

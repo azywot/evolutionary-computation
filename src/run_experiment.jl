@@ -53,33 +53,7 @@ generate_solution_graph(
     "local_steepest_search",
 )
 
-#########################3
-dir_path = "results/local_greedy_search"
-distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
-random_sol = greedy_2regret_heuristics(200, 1, distance_matrix, cost_vector)
-
-lg_solution, lg_cost = local_greedy_search(random_sol, distance_matrix, cost_vector, "node")
-lg_evaluated = evaluate_solution(lg_solution, distance_matrix, cost_vector)
-println("Local steepest cost calculated: ", lg_cost)
-println("Local steepest cost evaluated: ", lg_evaluated)
-
-best_solution_file_path = joinpath(dir_path, "TSPA_" * "best.csv")
-CSV.write(
-    best_solution_file_path,
-    DataFrame(
-        x = [coords[i][1] for i in lg_solution],
-        y = [coords[i][2] for i in lg_solution],
-        cost = [cost_vector[i] for i in lg_solution],
-    ),
-)
-
-generate_solution_graph(
-    "results/local_greedy_search/TSPA_best.csv",
-    coords,
-    cost_vector,
-    "local_greedy_search",
-)
-
+#########################
 
 for letter in ["A", "B", "C", "D"]
     filename = "data/TSP$letter.csv"
@@ -90,7 +64,9 @@ for letter in ["A", "B", "C", "D"]
                 println(
                     "Run parameters: TSP" *
                     "$letter" *
-                    "$method"" " *
+                    " " *
+                    "$method" *
+                    " " *
                     "$start_method" *
                     " " *
                     "$mode",
@@ -102,7 +78,7 @@ for letter in ["A", "B", "C", "D"]
                     method,
                     start_method,
                     mode,
-                    10,
+                    200,
                     filename,
                 )
                 generate_solution_graph(
