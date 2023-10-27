@@ -1,6 +1,7 @@
 using Combinatorics
 using Random
 
+
 """
 Generate an intra route solution.
 - `solution::Vector{Int}`: solution
@@ -43,6 +44,7 @@ function generate_intra_route_move(solution, dm, indices, mode)
     return sol, delta
 end
 
+
 """
 Generate an inter route solution.
 - `solution::Vector{Int}`: solution
@@ -74,7 +76,6 @@ function generate_inter_route_move(solution, dm, cost_vector, new_node, idx)
 end
 
 
-
 """
 Generate a local search greedy solution given a starting solution and a mode.
 - `iterations::Int`: number of iterations
@@ -85,8 +86,7 @@ Generate a local search greedy solution given a starting solution and a mode.
 
 returns: a local search solution and its cost
 """
-function local_greedy_search(iterations, solution, distance_matrix, cost_vector, mode)
-
+function local_greedy_search(solution, distance_matrix, cost_vector, mode)
     N, _ = size(distance_matrix)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
@@ -94,55 +94,47 @@ function local_greedy_search(iterations, solution, distance_matrix, cost_vector,
     best_cost = evaluate_solution(best_solution, distance_matrix, cost_vector)
     println("Initial cost: ", best_cost)
 
-    for i = 1:iterations
-        println("Iteration: ", i)
+    node_pairs = collect(Combinatorics.combinations(1:length(solution), 2))
+    delta = -1
+    while delta < 0
         new_solution = nothing
-        delta = 1000000
-        counter = 0
+        delta = 0
+        intra_count = 0
+        inter_count = 0
 
-        while delta > 0 && counter < 200
-            p = rand()
-            if p < 0.5
-                # intra-route; change edge or node within best_solution
-                indices = []
-                while length(indices) < 2
-                    i = rand(1:length(best_solution))
-                    j = rand(1:length(best_solution))
-                    if i < j
-                        push!(indices, i)
-                        push!(indices, j)
-                    end
-                end
+        node_pairs = shuffle(node_pairs)
+        unvisited = collect(setdiff(Set(1:N), Set(best_solution)))
+        candidate_idx_pairs =
+            shuffle(vec(collect(Iterators.product(unvisited, 1:length(best_solution)))))
+
+        while delta >= 0 &&
+            (intra_count < length(node_pairs) || inter_count < length(candidate_idx_pairs))
+            if rand() < 0.5 && intra_count < length(node_pairs)
+                intra_count += 1
+                indices = node_pairs[intra_count]
                 new_solution, delta =
                     generate_intra_route_move(best_solution, distance_matrix, indices, mode)
-            else
-                # inter-route; change node from best_solution with a node from unvisited
-                unvisited = setdiff(Set(1:N), Set(best_solution))
-                unvisited = collect(unvisited)
-
-                candidate_idx = rand(1:length(unvisited))
-                substitute_idx = rand(1:length(best_solution))
-                candidate = unvisited[candidate_idx]
-                indices = [candidate, substitute_idx] # insert candidate in position substitute_idx
+            elseif inter_count < length(candidate_idx_pairs)
+                inter_count += 1
+                candidate_node, idx = candidate_idx_pairs[inter_count]
                 new_solution, delta = generate_inter_route_move(
                     best_solution,
                     distance_matrix,
                     cost_vector,
-                    indices,
+                    candidate_node,
+                    idx,
                 )
             end
-
             if delta < 0
                 best_solution = deepcopy(new_solution)
                 best_cost += delta
-                println("Current best cost: ", best_cost, " delta: ", delta)
+                # println("Current best cost: ", best_cost, " delta: ", delta)
             end
-            counter += 1 # prevent infinite loop; TODO: clarify this
         end
     end
+    println("Local minimum reached")
     return best_solution, best_cost
 end
-
 
 
 """
@@ -179,19 +171,19 @@ function local_steepest_search(solution, distance_matrix, cost_vector, mode)
             end
         end
 
-        for idx = 1:length(best_solution)
-            for candidate_node in unvisited
-                new_solution, delta = generate_inter_route_move(
-                    best_solution,
-                    distance_matrix,
-                    cost_vector,
-                    candidate_node,
-                    idx,
-                )
-                if delta < best_delta
-                    best_solution_found = deepcopy(new_solution)
-                    best_delta = delta
-                end
+        candidate_idx_pairs =
+            vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
+        for pair in candidate_idx_pairs
+            new_solution, delta = generate_inter_route_move(
+                best_solution,
+                distance_matrix,
+                cost_vector,
+                pair[1],
+                pair[2],
+            )
+            if delta < best_delta
+                best_solution_found = deepcopy(new_solution)
+                best_delta = delta
             end
         end
 
