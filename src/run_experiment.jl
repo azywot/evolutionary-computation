@@ -6,26 +6,25 @@ include("./plots/solution_graph.jl")
 
 # =================================================================
 # PERFORM EXPERIMENTS FOR ALL PROBLEMS: 
-# for letter in ["A", "B", "C", "D"]
-#     filename = "data/TSP$letter.csv"
-#     distance_matrix, cost_vector, coords = read_data(filename)
-#     for method in [greedy_2regret, greedy_2regret_heuristics]#[random_solution, nn_solution, greedy_cycle]
-#         evaluate_statistics(distance_matrix, cost_vector, coords, method, 200, filename)
-#         generate_solution_graph(
-#             "results/$method/TSP$letter" * "_best.csv",
-#             coords,
-#             cost_vector,
-#             "$method",
-#         )
-#     end
-# end
-
+for letter in ["A", "B", "C", "D"]
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    for method in [greedy_2regret]
+        evaluate_statistics(distance_matrix, cost_vector, coords, method, 200, filename)
+        generate_solution_graph(
+            "results/$method/TSP$letter" * "_best.csv",
+            coords,
+            cost_vector,
+            "$method",
+        )
+    end
+end
 
 #  ======================= LOCAL SEARCH =======================
 distance_matrix, cost_vector, coords = read_data("data/TSPX.csv", true)
-instance_sol1 = [1, 2, 7, 4, 5, 6, 3, 8, 9] # node mode - działa
-instance_sol2 = [1, 2, 6, 5, 4, 3, 7, 8, 9] # edge mode - działa
-instance_sol3 = [1, 2, 3, 4, 5, 6, 7, 8, 9] # optimal solution with cost 36
+instance_sol1 = [1, 2, 7, 4, 5, 6, 3, 8, 9]
+instance_sol2 = [1, 2, 6, 5, 4, 3, 7, 8, 9]
+instance_sol3 = [1, 2, 3, 4, 5, 6, 7, 8, 9]
 instance_sol4 = [1, 3, 2, 4]
 
 lg_solution, lg_cost =
@@ -58,7 +57,7 @@ generate_solution_graph(
 for letter in ["A", "B", "C", "D"]
     filename = "data/TSP$letter.csv"
     distance_matrix, cost_vector, coords = read_data(filename)
-    for start_method in [random_solution, greedy_2regret_heuristics]
+    for start_method in [random_solution, "greedy_2regret_heuristics"]
         for mode in ["edge", "node"]
             for method in [local_steepest_search, local_greedy_search]
                 println(

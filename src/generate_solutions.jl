@@ -1,6 +1,8 @@
-using Statistics
 using CSV
 using Base.Filesystem
+using Statistics
+using Tables
+
 
 """
 # Evaluate Statistics for a problem instance given a particaular method.
@@ -16,9 +18,10 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     N = length(cost_vector)
     values = []
     times = []
+    permutation = []
 
     best_solution = nothing
-    best_cost = 1000000
+    best_cost = Inf
 
     for i = 1:iter
         time = @elapsed begin
@@ -57,6 +60,7 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
         mkpath(dir_path)
     end
     CSV.write(stats_file_path, stats)
+    # CSV.write("data/$filename" * "solution.csv", Tables.table(permutation), writeheader=false)
 
     best_solution_file_path = joinpath(dir_path, "$filename" * "best.csv")
     CSV.write(
@@ -92,6 +96,11 @@ function evaluate_local_search(
     iter,
     file_path,
 )
+    filename = splitext(basename(file_path))[1] * "_" * "$start_method" * "_" * "$mode"
+    results_dir = joinpath(dirname(dirname(file_path)), "results")
+    dir_path = joinpath(results_dir, "$method")
+    stats_file_path = joinpath(dir_path, "$filename" * "_stats.csv")
+    instance = split(filename, "_")[1]
 
     N = length(cost_vector)
     values = []
@@ -101,7 +110,15 @@ function evaluate_local_search(
     best_cost = Inf
 
     for i = 1:iter
-        start_solution = start_method(N, i, distance_matrix, cost_vector)
+        if start_method == "greedy_2regret_heuristics"
+            start_solution =
+                CSV.read("data/$instance" * "_solution.csv", DataFrame, header = false)[
+                    !,
+                    "Column1",
+                ]
+        else
+            start_solution = start_method(N, i, distance_matrix, cost_vector)
+        end
         time = @elapsed begin
             permutation = method(start_solution, distance_matrix, cost_vector, mode)
         end
@@ -115,12 +132,6 @@ function evaluate_local_search(
         end
 
     end
-
-    filename = splitext(basename(file_path))[1] * "_" * "$start_method" * "_" * "$mode"
-    results_dir = joinpath(dirname(dirname(file_path)), "results")
-    dir_path = joinpath(results_dir, "$method")
-
-    stats_file_path = joinpath(dir_path, "$filename" * "_stats.csv")
 
     stats = DataFrame(
         stat = ["mean", "min", "max", "time_mean", "time_min", "time_max"],
@@ -148,5 +159,4 @@ function evaluate_local_search(
             cost = [cost_vector[i] for i in best_solution],
         ),
     )
-
 end
