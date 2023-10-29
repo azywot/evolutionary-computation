@@ -38,8 +38,11 @@ function generate_intra_route_move(solution, dm, indices, mode)
         minus = dm[sol[i], sol[i+1]] + dm[sol[j], sol[mod(j, n)+1]]
 
         delta = plus - minus
-        sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[mod(j, n)+1:end])
-
+        if j == n
+            sol = vcat(sol[1:i], reverse(sol[i+1:j]))
+        else
+            sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[j+1:end])
+        end
     end
     return sol, delta
 end
