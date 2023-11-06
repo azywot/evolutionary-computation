@@ -110,7 +110,7 @@ function evaluate_local_search(
     best_cost = Inf
 
     for i = 1:iter
-        if start_method == "greedy_2regret_heuristics"
+        if start_method == "greedy_cycle"
             start_solution =
                 CSV.read("data/$instance" * "_solution.csv", DataFrame, header = false)[
                     !,

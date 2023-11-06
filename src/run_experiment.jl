@@ -9,7 +9,7 @@ include("./plots/solution_graph.jl")
 for letter in ["A", "B", "C", "D"]
     filename = "data/TSP$letter.csv"
     distance_matrix, cost_vector, coords = read_data(filename)
-    for method in [greedy_2regret]
+    for method in [greedy_cycle]
         evaluate_statistics(distance_matrix, cost_vector, coords, method, 200, filename)
         generate_solution_graph(
             "results/$method/TSP$letter" * "_best.csv",
@@ -57,7 +57,7 @@ generate_solution_graph(
 for letter in ["A", "B", "C", "D"]
     filename = "data/TSP$letter.csv"
     distance_matrix, cost_vector, coords = read_data(filename)
-    for start_method in [random_solution, "greedy_2regret_heuristics"]
+    for start_method in [random_solution, "greedy_cycle"]
         for mode in ["edge", "node"]
             for method in [local_steepest_search, local_greedy_search]
                 println(
