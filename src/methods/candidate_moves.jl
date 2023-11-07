@@ -10,6 +10,7 @@ Get nearest (in terms of optimized function) n vertices to the provided node
 returns: n nearest vertices
 """
 function get_nearest_n_vertices(node, total_cost_matrix, n = 10)
+    # should we consider only unvisited? (yes?)
     neighbours = total_cost_matrix[node, :]
     return partialsortperm(neighbours, 1:n)
 end
