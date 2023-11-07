@@ -25,7 +25,7 @@ Generate a local search steepest solution given a starting solution and a mode.
 
 returns: a local search solution and its cost
 """
-function local_steepest_search_candidate(
+function local_search_candidate_moves(
     solution,
     distance_matrix,
     cost_vector,

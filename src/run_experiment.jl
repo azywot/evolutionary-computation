@@ -59,7 +59,7 @@ for letter in ["A", "B", "C", "D"]
     distance_matrix, cost_vector, coords = read_data(filename)
     for start_method in [random_solution]#, "greedy_cycle"]
         for mode in ["edge"]#, "node"]
-            for method in [local_steepest_search_candidate]#, local_steepest_search, local_greedy_search]
+            for method in [local_search_candidate_moves]#, local_steepest_search, local_greedy_search]
                 println(
                     "Run parameters: TSP" *
                     "$letter" *
