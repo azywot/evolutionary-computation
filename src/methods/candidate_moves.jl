@@ -31,6 +31,7 @@ function local_search_candidate_moves(
     cost_vector,
     mode = "edge",
 )
+    n = length(solution)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
@@ -52,16 +53,29 @@ function local_search_candidate_moves(
                     else
                         indices = [candidate_idx, idx]
                     end
-                    # println(indices)
-                    new_solution, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
+                    new_solution1, delta1 = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
+                    new_solution2, delta2 = generate_intra_route_move(best_solution, distance_matrix, indices, mode, true) # reverse_search
+                    new_solution, delta = (delta1 < delta2) ? (new_solution1, delta1) : (new_solution2, delta2)
                 else
-                    new_solution, delta = generate_inter_route_move(
+                    # swap with idx-1 with a candidate
+                    new_solution1, delta1 = generate_inter_route_move(
                         best_solution,
                         distance_matrix,
                         cost_vector,
                         candidate,
-                        idx,
+                        mod(idx-2, n) + 1,
                     )
+
+                    # swap with idx+1 with a candidate
+                    new_solution2, delta2 = generate_inter_route_move(
+                        best_solution,
+                        distance_matrix,
+                        cost_vector,
+                        candidate,
+                        mod(idx, n) + 1,
+                    )
+
+                    new_solution, delta = (delta1 < delta2) ? (new_solution1, delta1) : (new_solution2, delta2)
                 end
 
                 if delta < best_delta

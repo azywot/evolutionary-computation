@@ -8,10 +8,11 @@ Generate an intra route solution.
 - `dm::Matrix{Int}`: matrix of distances between nodes
 - `indices::Vector{Int}`: indices of nodes to be swapped (either the nodes or its edges)
 - `mode::String`: mode of the local search, either "node" or "edge"
+- `reverse_search::Bool`: whether to reverse edge search or not
 
 returns: a local search solution and its delta
 """
-function generate_intra_route_move(solution, dm, indices, mode)
+function generate_intra_route_move(solution, dm, indices, mode, reverse_search = false)
     n = length(solution)
     sol = deepcopy(solution)
     i, j = indices[1], indices[2]
@@ -34,14 +35,30 @@ function generate_intra_route_move(solution, dm, indices, mode)
         if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n)
             return sol, 0
         end
-        plus = dm[sol[i], sol[j]] + dm[sol[i+1], sol[mod(j, n)+1]]
-        minus = dm[sol[i], sol[i+1]] + dm[sol[j], sol[mod(j, n)+1]]
+
+        plus, minus = 0, 0
+        if reverse_search
+            plus = dm[sol[i], sol[j]] + dm[sol[mod(i - 2, n)+1], sol[j-1]]
+            minus = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[j-1], sol[j]]
+        else
+            plus = dm[sol[i], sol[j]] + dm[sol[i+1], sol[mod(j, n)+1]]
+            minus = dm[sol[i], sol[i+1]] + dm[sol[j], sol[mod(j, n)+1]]
+        end
+
 
         delta = plus - minus
-        if j == n
-            sol = vcat(sol[1:i], reverse(sol[i+1:j]))
+        if reverse_search
+            if i == 1
+                sol = vcat(reverse(sol[i:j-1]), sol[j:end])
+            else
+                sol = vcat(sol[1:i-1], reverse(sol[i:j-1]), sol[j:end])
+            end
         else
-            sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[j+1:end])
+            if j == n
+                sol = vcat(sol[1:i], reverse(sol[i+1:j]))
+            else
+                sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[j+1:end])
+            end
         end
     end
     return sol, delta
