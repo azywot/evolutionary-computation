@@ -157,6 +157,7 @@ function evaluate_local_search(
             x = [coords[i][1] for i in best_solution],
             y = [coords[i][2] for i in best_solution],
             cost = [cost_vector[i] for i in best_solution],
+            node = [i-1 for i in best_solution] # added in case we need it later
         ),
     )
 end
