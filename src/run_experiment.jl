@@ -53,13 +53,13 @@ generate_solution_graph(
 )
 
 #########################
-
-for letter in ["A", "B", "C", "D"]
+include("./methods/all_methods.jl")
+for letter in ["A"]#, "B", "C", "D"]
     filename = "data/TSP$letter.csv"
     distance_matrix, cost_vector, coords = read_data(filename)
     for start_method in [random_solution]#, "greedy_cycle"]
         for mode in ["edge"]#, "node"]
-            for method in [local_search_candidate_moves]#, local_steepest_search, local_greedy_search]
+            for method in [local_search_previous_deltas]#, local_steepest_search, local_greedy_search]
                 println(
                     "Run parameters: TSP" *
                     "$letter" *
@@ -77,7 +77,7 @@ for letter in ["A", "B", "C", "D"]
                     method,
                     start_method,
                     mode,
-                    200,
+                    1,#200,
                     filename,
                 )
                 generate_solution_graph(
