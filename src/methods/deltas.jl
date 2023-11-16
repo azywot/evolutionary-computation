@@ -32,18 +32,33 @@ returns: true if applicable, false otherwise
 returns: true if is to be stored, false otherwise
 """
 function is_applicable_is_stored(solution, move_tuple)
-    nodes, nodes_intra, move = move_tuple
+    nodes, temp, move = move_tuple
 
     # inter move
     if move == "inter"
-        if !(nodes[1] in solution) && nodes[2] in solution
-            return true, false 
+        new_node, old_node = nodes
+        if !(new_node in solution) && old_node in solution
+            node_from, node_to = temp
+            edge1 = [node_from, old_node]
+            edge2 = [old_node, node_to]
+
+            edge_exists1, order_preserved1 = edge_exists_order_preserved(edge1, solution)
+            edge_exists2, order_preserved2 = edge_exists_order_preserved(edge2, solution)
+
+            if edge_exists1 && edge_exists2
+                if order_preserved1 && order_preserved2
+                    return true, false
+                else
+                    return false, true
+                end
+            end
         end
         return false, false
     end
 
     # intra move
     edge1, edge2 = [], []
+    nodes_intra = temp
     if move == "intra_forward"
         edge1 = [nodes[1], nodes_intra[1]]
         edge2 = [nodes[2], nodes_intra[2]]
@@ -165,7 +180,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             move = "intra_backward"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
             nodes_intra = [best_solution[mod(indices[1]-2, n)+1], best_solution[mod(indices[2]-2, n)+1]]
-            
+
             if !((nodes, nodes_intra, move) in keys(LM_pq))
                 _, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode, true)
                 if delta < 0 # brings improvement
@@ -176,23 +191,24 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
         end
 
         # inter moves -> TODO: fix it
-        # candidate_idx_pairs = vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
-        # for pair in candidate_idx_pairs
-        #     move = "inter"
-        #     nodes = [pair[1], best_solution[pair[2]]]
-        #     if !((nodes, [], move) in keys(LM_pq))
-        #         _, delta = generate_inter_route_move(
-        #             best_solution,
-        #             distance_matrix,
-        #             cost_vector,
-        #             pair[1],
-        #             pair[2],
-        #         )
-        #         if delta < 0 # brings improvement
-        #             enqueue!(LM_pq, (nodes, [], move), delta)
-        #         end
-        #     end
-        # end
+        candidate_idx_pairs = vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
+        for pair in candidate_idx_pairs
+            move = "inter"
+            nodes = [pair[1], best_solution[pair[2]]]
+            nodes_from_to = [best_solution[mod(pair[2]-2, n)+1], best_solution[mod(pair[2], n)+1]]
+            if !((nodes, nodes_from_to, move) in keys(LM_pq))
+                _, delta = generate_inter_route_move(
+                    best_solution,
+                    distance_matrix,
+                    cost_vector,
+                    pair[1],
+                    pair[2],
+                )
+                if delta < 0 # brings improvement
+                    enqueue!(LM_pq, (nodes, nodes_from_to, move), delta)
+                end
+            end
+        end
 
         for move_tuple in keys(LM_pq)
             applicable, stored = is_applicable_is_stored(best_solution, move_tuple)
