@@ -18,7 +18,7 @@ function edge_exists_order_preserved(nodes, solution)
     pos_2 = findfirst(==(nodes[2]), solution)
 
     edge_exists = pos_1 + 1 == pos_2 || pos_2 + 1 == pos_1
-    order_preserved = pos_1 + 1 == pos_2
+    order_preserved = edge_exists && (pos_1 + 1 == pos_2)
     return edge_exists, order_preserved
 end
 
@@ -46,14 +46,14 @@ function is_applicable_is_stored(solution, move_tuple)
             edge_exists2, order_preserved2 = edge_exists_order_preserved(edge2, solution)
 
             if edge_exists1 && edge_exists2
-                if order_preserved1 && order_preserved2
-                    return true, false
+                if !xor(order_preserved1, order_preserved2)
+                    return true, false # applicable, not stored
                 else
-                    return false, true
+                    return false, true # not applicable, stored
                 end
             end
         end
-        return false, false
+        return false, false # not applicable, not stored
     end
 
     # intra move
@@ -70,13 +70,13 @@ function is_applicable_is_stored(solution, move_tuple)
     edge_exists1, order_preserved1 = edge_exists_order_preserved(edge1, solution)
     edge_exists2, order_preserved2 = edge_exists_order_preserved(edge2, solution)
     if edge_exists1 && edge_exists2
-        if order_preserved1 && order_preserved2
-            return true, false
+        if !xor(order_preserved1, order_preserved2)
+            return true, false # applicable, not stored
         else
-            return false, true
+            return false, true # not applicable, stored
         end
     end
-    return false, false
+    return false, false # not applicable, not stored
 end
 
 
@@ -112,7 +112,7 @@ function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
             distance_matrix,
             [node1_index, node2_index],
             mode,
-            true,
+            true, # backward
         )
         return new_solution
 
@@ -190,7 +190,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
 
         end
 
-        # inter moves -> TODO: fix it
+        # inter moves
         candidate_idx_pairs = vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
         for pair in candidate_idx_pairs
             move = "inter"
