@@ -131,9 +131,8 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
-    LM_dict = Dict{Tuple{Vector{Int64}, Vector{Int64}, String}, Float64}()
-    # LM = SortedSet{Tuple{Float64, Vector{Int64}, Vector{Int64}, String}}() 
-    # (delta, nodes, nodes_intra, move)) it is auto sorted by first element
+    LM_pq = PriorityQueue{Tuple{Vector{Int64}, Vector{Int64}, String}, Float64}()
+    # Priority Queue{(nodes, nodes_intra, move) delta} it is auto sorted by delta
     # nodes - the nodes that are moved
     # nodes_intra - nodes in the intra mode 
     #       eg. for node1: nodes[1] -> nodes_intra[1] in forward search
@@ -155,13 +154,10 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
             nodes_intra = [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
-            if !haskey(LM_dict, (nodes, nodes_intra, move))
-            # exists_pattern = any(x -> x[2:end] == (nodes, nodes_intra, move), LM)
-            # if !exists_pattern
+            if !((nodes, nodes_intra, move) in keys(LM_pq))
                 _, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode)
                 if delta < 0 # brings improvement
-                    LM_dict[(nodes, nodes_intra, move)] = delta
-                    # push!(LM, (delta, nodes, nodes_intra, move)) # operate on nodes
+                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
                 end
             end
 
@@ -169,61 +165,54 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             move = "intra_backward"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
             nodes_intra = [best_solution[mod(indices[1]-2, n)+1], best_solution[mod(indices[2]-2, n)+1]]
-            if !haskey(LM_dict, (nodes, nodes_intra, move))
-            # exists_pattern = any(x -> x[2:end] == (nodes, nodes_intra, move), LM)
-            # if !exists_pattern
+            
+            if !((nodes, nodes_intra, move) in keys(LM_pq))
                 _, delta = generate_intra_route_move(best_solution, distance_matrix, indices, mode, true)
                 if delta < 0 # brings improvement
-                    LM_dict[(nodes, nodes_intra, move)] = delta
-                    # push!(LM, (delta, nodes, nodes_intra, move)) # operate on nodes
+                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
                 end
             end
 
         end
 
-        # inter moves
-        candidate_idx_pairs = vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
-        for pair in candidate_idx_pairs
-            move = "inter"
-            nodes = [pair[1], best_solution[pair[2]]]
-            if !haskey(LM_dict, (nodes, [], move))
-            # exists_pattern = any(x -> x[2:end] == (nodes, [], move), LM)
-            # if !exists_pattern
-                _, delta = generate_inter_route_move(
-                    best_solution,
-                    distance_matrix,
-                    cost_vector,
-                    pair[1],
-                    pair[2],
-                )
-                if delta < 0 # brings improvement
-                    LM_dict[(nodes, [], move)] = delta
-                    # push!(LM, (delta, nodes, [], move)) # operate on nodes
-                end
-            end
-        end
+        # inter moves -> TODO: fix it
+        # candidate_idx_pairs = vec(collect(Iterators.product(unvisited, 1:length(best_solution))))
+        # for pair in candidate_idx_pairs
+        #     move = "inter"
+        #     nodes = [pair[1], best_solution[pair[2]]]
+        #     if !((nodes, [], move) in keys(LM_pq))
+        #         _, delta = generate_inter_route_move(
+        #             best_solution,
+        #             distance_matrix,
+        #             cost_vector,
+        #             pair[1],
+        #             pair[2],
+        #         )
+        #         if delta < 0 # brings improvement
+        #             enqueue!(LM_pq, (nodes, [], move), delta)
+        #         end
+        #     end
+        # end
 
-        sorted_keys = sort(collect(keys(LM_dict)), by = x -> LM_dict[x])
-        for key in sorted_keys
-            applicable, stored = is_applicable_is_stored(best_solution, key)
+        for move_tuple in keys(LM_pq)
+            applicable, stored = is_applicable_is_stored(best_solution, move_tuple)
 
             if applicable
                 move_found = true
-                best_solution = apply_move(best_solution, key, distance_matrix, cost_vector, mode)
+                best_solution = apply_move(best_solution, move_tuple, distance_matrix, cost_vector, mode)
             end
 
             if !stored
-                delete!(LM_dict, key)
-                # splice!(LM_array, i) # remove move if is not to be stored
+                delete!(LM_pq, move_tuple)
             end
 
             if move_found
                 break
             end
         end
-        # LM = SortedSet(LM_array)
-        println("best cost:", evaluate_solution(best_solution, distance_matrix, cost_vector))
+        # println("best cost:", evaluate_solution(best_solution, distance_matrix, cost_vector))
+        # println("LM size: ", length(LM_pq))
     end
-    println("LOCAL MINIMUM REACHED")
+    # println("LOCAL MINIMUM REACHED")
     return best_solution
 end

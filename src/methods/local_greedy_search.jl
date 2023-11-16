@@ -18,10 +18,10 @@ function generate_intra_route_move(solution, dm, indices, mode, reverse_search =
     i, j = indices[1], indices[2]
 
     if mode == "node"
-        plus_i = dm[sol[j-1], sol[i]] + dm[sol[i], sol[mod(j, n)+1]]
-        plus_j = dm[sol[mod(i - 2, n)+1], sol[j]] + dm[sol[j], sol[i+1]]
-        minus_i = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[i], sol[i+1]]
-        minus_j = dm[sol[j-1], sol[j]] + dm[sol[j], sol[mod(j, n)+1]]
+        plus_i = dm[sol[mod(j - 2, n)], sol[i]] + dm[sol[i], sol[mod(j, n)+1]]
+        plus_j = dm[sol[mod(i - 2, n)+1], sol[j]] + dm[sol[j], sol[mod(i, n)+1]]
+        minus_i = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[i], sol[mod(i, n)+1]]
+        minus_j = dm[sol[mod(j - 2, n)], sol[j]] + dm[sol[j], sol[mod(j, n)+1]]
 
         delta = plus_i + plus_j - minus_i - minus_j
         sol[i], sol[j] = sol[j], sol[i]
@@ -38,26 +38,34 @@ function generate_intra_route_move(solution, dm, indices, mode, reverse_search =
 
         plus, minus = 0, 0
         if reverse_search
-            plus = dm[sol[i], sol[j]] + dm[sol[mod(i - 2, n)+1], sol[j-1]]
-            minus = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[j-1], sol[j]]
+            plus = dm[sol[i], sol[j]] + dm[sol[mod(i - 2, n)+1], sol[mod(j - 2, n)+1]]
+            minus = dm[sol[mod(i - 2, n)+1], sol[i]] + dm[sol[mod(j - 2, n)+1], sol[j]]
         else
-            plus = dm[sol[i], sol[j]] + dm[sol[i+1], sol[mod(j, n)+1]]
-            minus = dm[sol[i], sol[i+1]] + dm[sol[j], sol[mod(j, n)+1]]
+            plus = dm[sol[i], sol[j]] + dm[sol[mod(i, n)+1], sol[mod(j, n)+1]]
+            minus = dm[sol[i], sol[mod(i, n)+1]] + dm[sol[j], sol[mod(j, n)+1]]
         end
 
 
         delta = plus - minus
+        if i < j
+            lower = i
+            upper = j
+        else
+            lower = j
+            upper = i
+        end
+
         if reverse_search
-            if i == 1
-                sol = vcat(reverse(sol[i:j-1]), sol[j:end])
+            if lower == 1
+                sol = vcat(reverse(sol[lower:upper-1]), sol[upper:end])
             else
-                sol = vcat(sol[1:i-1], reverse(sol[i:j-1]), sol[j:end])
+                sol = vcat(sol[1:lower-1], reverse(sol[lower:upper-1]), sol[upper:end])
             end
         else
-            if j == n
-                sol = vcat(sol[1:i], reverse(sol[i+1:j]))
+            if upper == n
+                sol = vcat(sol[1:lower], reverse(sol[lower+1:upper]))
             else
-                sol = vcat(sol[1:i], reverse(sol[i+1:j]), sol[j+1:end])
+                sol = vcat(sol[1:lower], reverse(sol[lower+1:upper]), sol[upper+1:end])
             end
         end
     end
