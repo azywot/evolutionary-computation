@@ -2,6 +2,33 @@ using DataStructures
 
 include("./local_greedy_search.jl")
 
+
+"""
+Evaluate an intra cross EDGE move.
+- `solution::Vector{Int}`: solution
+- `dm::Matrix{Int}`: matrix of distances between nodes
+- `indices::Vector{Int}`: indices of nodes to be swapped (either the nodes or its edges)
+
+returns: delta of the move
+"""
+function evaluate_intra_cross_move(solution, dm, indices)
+    n = length(solution)
+    sol = deepcopy(solution)
+    i, j = indices[1], indices[2]
+
+    # if nodes are already connected by edge
+    if mod(i + 1, n) == mod(j, n) || mod(j + 1, n) == mod(i, n)
+        return 0
+    end
+
+    plus = dm[sol[i], sol[mod(j, n)+1]] + dm[sol[j], sol[mod(i, n)+1]]
+    minus = dm[sol[i], sol[mod(i, n)+1]] + dm[sol[j], sol[mod(j, n)+1]]
+
+    return plus - minus # delta
+end
+
+
+
 """ 
 Check whether the order of the nodes is preserved in the solution.
 - `nodes::Vector{Int}`: nodes
@@ -70,9 +97,9 @@ function is_applicable_is_stored(solution, move_tuple)
     if move == "intra_forward"
         edge1 = [nodes[1], nodes_intra[1]]
         edge2 = [nodes[2], nodes_intra[2]]
-    elseif move == "intra_backward"
-        edge1 = [nodes_intra[1], nodes[1]]
-        edge2 = [nodes_intra[2], nodes[2]]
+    # elseif move == "intra_backward"
+    #     edge1 = [nodes_intra[1], nodes[1]]
+    #     edge2 = [nodes_intra[2], nodes[2]]
     end
 
     edge_exists1, order_preserved1 = edge_exists_order_preserved(edge1, solution)
@@ -105,17 +132,17 @@ function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
         )
         return new_solution
 
-    elseif move == "intra_backward"
-        node1_index = findfirst(==(nodes[1]), solution)
-        node2_index = findfirst(==(nodes[2]), solution)
-        new_solution, _ = generate_intra_route_move(
-            solution,
-            distance_matrix,
-            [node1_index, node2_index],
-            mode,
-            true, # backward
-        )
-        return new_solution
+    # elseif move == "intra_backward"
+    #     node1_index = findfirst(==(nodes[1]), solution)
+    #     node2_index = findfirst(==(nodes[2]), solution)
+    #     new_solution, _ = generate_intra_route_move(
+    #         solution,
+    #         distance_matrix,
+    #         [node1_index, node2_index],
+    #         mode,
+    #         true, # backward
+    #     )
+    #     return new_solution
 
     else # inter move
         node_index = findfirst(==(nodes[2]), solution)
@@ -166,38 +193,28 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             # forward search
             move = "intra_forward"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
-            nodes_intra =
+            nodes_succ =
                 [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
-            if !((nodes, nodes_intra, move) in keys(LM_pq))
+            if !((nodes, nodes_succ, move) in keys(LM_pq))
                 _, delta =
                     generate_intra_route_move(best_solution, distance_matrix, indices, mode)
                 if delta < 0 # brings improvement
-                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
+                    enqueue!(LM_pq, (nodes, nodes_succ, move), delta)
                 end
             end
 
-            # backward search
-            move = "intra_backward"
+            # cross move
+            # NOTE: we leave "intra_move" to somehow perform the move once applicable
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
-            nodes_intra = [
-                best_solution[mod(indices[1] - 2, n)+1],
-                best_solution[mod(indices[2] - 2, n)+1],
-            ]
-
-            if !((nodes, nodes_intra, move) in keys(LM_pq))
-                _, delta = generate_intra_route_move(
-                    best_solution,
-                    distance_matrix,
-                    indices,
-                    mode,
-                    true,
-                )
+            nodes_succ =
+                [best_solution[mod(indices[2], n)+1], best_solution[mod(indices[1], n)+1]]
+            if !((nodes, nodes_succ, move) in keys(LM_pq))
+                delta = evaluate_intra_cross_move(best_solution, distance_matrix, indices)
                 if delta < 0 # brings improvement
-                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
+                    enqueue!(LM_pq, (nodes, nodes_succ, move), delta)
                 end
             end
-
         end
 
         # inter moves
@@ -244,9 +261,9 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
                 break
             end
         end
-        # println("best cost:", evaluate_solution(best_solution, distance_matrix, cost_vector))
-        # println("LM size: ", length(LM_pq))
+        println("best cost:", evaluate_solution(best_solution, distance_matrix, cost_vector))
+        println("LM size: ", length(LM_pq))
     end
-    # println("LOCAL MINIMUM REACHED")
+    println("LOCAL MINIMUM REACHED")
     return best_solution
 end
