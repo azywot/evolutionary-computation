@@ -199,16 +199,18 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             nodes = [pair[1], best_solution[pair[2]]]
             nodes_from_to =
                 [best_solution[mod(pair[2] - 2, n)+1], best_solution[mod(pair[2], n)+1]]
-            if !haskey(LM_pq, (nodes, nodes_from_to, move))
-                _, delta = generate_inter_route_move(
-                    best_solution,
-                    distance_matrix,
-                    cost_vector,
-                    pair[1],
-                    pair[2],
-                )
-                if delta < 0 # brings improvement
-                    LM_pq[(nodes, nodes_from_to, move)] = delta
+            if any(x -> x in changed, vcat(nodes, nodes_from_to))
+                if !haskey(LM_pq, (nodes, nodes_from_to, move))
+                    _, delta = generate_inter_route_move(
+                        best_solution,
+                        distance_matrix,
+                        cost_vector,
+                        pair[1],
+                        pair[2],
+                    )
+                    if delta < 0 # brings improvement
+                        LM_pq[(nodes, nodes_from_to, move)] = delta
+                    end
                 end
             end
         end
