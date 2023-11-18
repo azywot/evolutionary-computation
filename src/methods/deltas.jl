@@ -157,32 +157,13 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             nodes_intra =
                 [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
-            if any(x -> x in changed, vcat(nodes, nodes_intra))
+            if count(x -> x in changed, vcat(nodes, nodes_intra)) > 1
                 if !haskey(LM_pq, (nodes, nodes_intra, move))
                     _, delta = generate_intra_route_move(
                         best_solution,
                         distance_matrix,
                         indices,
                         mode,
-                    )
-                    if delta < 0 # brings improvement
-                        LM_pq[(nodes, nodes_intra, move)] = delta
-                    end
-                end
-            end
-            move = "intra_backward"
-            nodes_intra = [
-                best_solution[mod(indices[1] - 2, n)+1],
-                best_solution[mod(indices[2] - 2, n)+1],
-            ]
-            if any(x -> x in changed, vcat(nodes, nodes_intra))
-                if !haskey(LM_pq, (nodes, nodes_intra, move))
-                    _, delta = generate_intra_route_move(
-                        best_solution,
-                        distance_matrix,
-                        indices,
-                        mode,
-                        true,
                     )
                     if delta < 0 # brings improvement
                         LM_pq[(nodes, nodes_intra, move)] = delta
@@ -199,7 +180,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             nodes = [pair[1], best_solution[pair[2]]]
             nodes_from_to =
                 [best_solution[mod(pair[2] - 2, n)+1], best_solution[mod(pair[2], n)+1]]
-            if any(x -> x in changed, vcat(nodes, nodes_from_to))
+            if count(x -> x in changed, vcat(nodes, nodes_from_to)) > 1
                 if !haskey(LM_pq, (nodes, nodes_from_to, move))
                     _, delta = generate_inter_route_move(
                         best_solution,
