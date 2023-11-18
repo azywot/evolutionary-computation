@@ -67,14 +67,9 @@ function is_applicable_is_stored(solution, move_tuple)
 
     # intra move
     edge1, edge2 = [], []
-    nodes_intra = temp
-    if move == "intra_forward"
-        edge1 = [nodes[1], nodes_intra[1]]
-        edge2 = [nodes[2], nodes_intra[2]]
-    elseif move == "intra_backward"
-        edge1 = [nodes_intra[1], nodes[1]]
-        edge2 = [nodes_intra[2], nodes[2]]
-    end
+    nodes_succ = temp
+    edge1 = [nodes[1], nodes_succ[1]]
+    edge2 = [nodes[2], nodes_succ[2]]
 
     edge_exists1, order_preserved1 = edge_exists_order_preserved(edge1, solution)
     edge_exists2, order_preserved2 = edge_exists_order_preserved(edge2, solution)
@@ -95,7 +90,7 @@ returns: a new solution
 function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
     nodes, _, move = move_tuple
 
-    if move in ["intra_forward", "intra_backward"]
+    if move == "intra"
         node1_index = findfirst(==(nodes[1]), solution)
         node2_index = findfirst(==(nodes[2]), solution)
         new_solution, _ = generate_intra_route_move(
@@ -103,7 +98,6 @@ function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
             distance_matrix,
             [node1_index, node2_index],
             mode,
-            move == "intra_backward",
         )
         return new_solution
     else # inter move
@@ -136,12 +130,17 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
     cost_vector = deepcopy(cost_vector)
     best_solution = deepcopy(solution)
     LM_pq = PriorityQueue{Tuple{Vector{Int64},Vector{Int64},String},Float64}()
-    # Priority Queue{(nodes, nodes_intra, move) delta} it is auto sorted by delta
+    # Priority Queue{(nodes, nodes2, move) delta} it is auto sorted by delta
     # nodes - the nodes that are moved
-    # nodes_intra - nodes in the intra mode 
-    #       eg. for node1: nodes[1] -> nodes_intra[1] in forward search
-    #               nodes[1] -> nodes_intra[1] in backward search 
-    # move - intra_forward/intra_backward/inter
+    # nodes2:
+    # in case of "intra" move:
+    #   nodes_succ = nodes2
+    #   i.e. [nodes[1] -> nodes_succ[1]], [nodes[2] -> nodes_succ[2]]
+    # in case of "inter" move:
+    #   nodes = new_node, old_node
+    #   node_from, node_to = nodes2
+    #   i.e. [node_from -> old_node -> node_to] replaced by [node_from -> new_node -> node_to]
+    # move - intra/inter
 
     move_found = true
     changed = Set(1:N)
@@ -152,13 +151,13 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
 
         # intra moves
         for indices in node_pairs
-            move = "intra_forward"
+            move = "intra"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
-            nodes_intra =
+            nodes_succ =
                 [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
-            if count(x -> x in changed, vcat(nodes, nodes_intra)) > 1
-                if !haskey(LM_pq, (nodes, nodes_intra, move))
+            if count(x -> x in changed, vcat(nodes, nodes_succ)) > 1
+                if !haskey(LM_pq, (nodes, nodes_succ, move))
                     _, delta = generate_intra_route_move(
                         best_solution,
                         distance_matrix,
@@ -166,7 +165,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
                         mode,
                     )
                     if delta < 0 # brings improvement
-                        LM_pq[(nodes, nodes_intra, move)] = delta
+                        LM_pq[(nodes, nodes_succ, move)] = delta
                     end
                 end
             end
