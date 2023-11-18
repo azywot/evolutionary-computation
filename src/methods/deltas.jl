@@ -22,6 +22,7 @@ function edge_exists_order_preserved(nodes, solution)
     return edge_exists, order_preserved
 end
 
+
 function applicable_stored(edge1, edge2, order1, order2)
     if edge1 && edge2
         if !xor(order1, order2)
@@ -94,7 +95,7 @@ returns: a new solution
 function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
     nodes, _, move = move_tuple
 
-    if move == "intra_forward"
+    if move in ["intra_forward", "intra_backward"]
         node1_index = findfirst(==(nodes[1]), solution)
         node2_index = findfirst(==(nodes[2]), solution)
         new_solution, _ = generate_intra_route_move(
@@ -102,21 +103,9 @@ function apply_move(solution, move_tuple, distance_matrix, cost_vector, mode)
             distance_matrix,
             [node1_index, node2_index],
             mode,
+            move == "intra_backward",
         )
         return new_solution
-
-    elseif move == "intra_backward"
-        node1_index = findfirst(==(nodes[1]), solution)
-        node2_index = findfirst(==(nodes[2]), solution)
-        new_solution, _ = generate_intra_route_move(
-            solution,
-            distance_matrix,
-            [node1_index, node2_index],
-            mode,
-            true, # backward
-        )
-        return new_solution
-
     else # inter move
         node_index = findfirst(==(nodes[2]), solution)
         new_solution, _ = generate_inter_route_move(
@@ -155,7 +144,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
     # move - intra_forward/intra_backward/inter
 
     move_found = true
-
+    changed = [-1, -1, -1, -1]
     while move_found
         move_found = false
         unvisited = collect(setdiff(Set(1:N), Set(best_solution)))
@@ -163,41 +152,43 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
 
         # intra moves
         for indices in node_pairs
-            # forward search
             move = "intra_forward"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
             nodes_intra =
                 [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
-            if !((nodes, nodes_intra, move) in keys(LM_pq))
-                _, delta =
-                    generate_intra_route_move(best_solution, distance_matrix, indices, mode)
-                if delta < 0 # brings improvement
-                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
+            if any(x -> x in changed, vcat(nodes, nodes_intra))
+                if !haskey(LM_pq, (nodes, nodes_intra, move))
+                    _, delta = generate_intra_route_move(
+                        best_solution,
+                        distance_matrix,
+                        indices,
+                        mode,
+                    )
+                    if delta < 0 # brings improvement
+                        LM_pq[(nodes, nodes_intra, move)] = delta
+                    end
                 end
             end
-
-            # backward search
             move = "intra_backward"
-            nodes = [best_solution[indices[1]], best_solution[indices[2]]]
             nodes_intra = [
                 best_solution[mod(indices[1] - 2, n)+1],
                 best_solution[mod(indices[2] - 2, n)+1],
             ]
-
-            if !((nodes, nodes_intra, move) in keys(LM_pq))
-                _, delta = generate_intra_route_move(
-                    best_solution,
-                    distance_matrix,
-                    indices,
-                    mode,
-                    true,
-                )
-                if delta < 0 # brings improvement
-                    enqueue!(LM_pq, (nodes, nodes_intra, move), delta)
+            if any(x -> x in changed, vcat(nodes, nodes_intra))
+                if !haskey(LM_pq, (nodes, nodes_intra, move))
+                    _, delta = generate_intra_route_move(
+                        best_solution,
+                        distance_matrix,
+                        indices,
+                        mode,
+                        true,
+                    )
+                    if delta < 0 # brings improvement
+                        LM_pq[(nodes, nodes_intra, move)] = delta
+                    end
                 end
             end
-
         end
 
         # inter moves
@@ -208,7 +199,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
             nodes = [pair[1], best_solution[pair[2]]]
             nodes_from_to =
                 [best_solution[mod(pair[2] - 2, n)+1], best_solution[mod(pair[2], n)+1]]
-            if !((nodes, nodes_from_to, move) in keys(LM_pq))
+            if !haskey(LM_pq, (nodes, nodes_from_to, move))
                 _, delta = generate_inter_route_move(
                     best_solution,
                     distance_matrix,
@@ -217,7 +208,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
                     pair[2],
                 )
                 if delta < 0 # brings improvement
-                    enqueue!(LM_pq, (nodes, nodes_from_to, move), delta)
+                    LM_pq[(nodes, nodes_from_to, move)] = delta
                 end
             end
         end
@@ -234,6 +225,8 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
                     cost_vector,
                     mode,
                 )
+                nodes, new_nodes, move = move_tuple
+                changed = vcat(nodes, new_nodes)
             end
 
             if !stored
