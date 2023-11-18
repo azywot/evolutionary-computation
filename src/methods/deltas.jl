@@ -71,9 +71,9 @@ function is_applicable_is_stored(solution, move_tuple)
     if move == "intra_forward"
         edge1 = [nodes[1], nodes_intra[1]]
         edge2 = [nodes[2], nodes_intra[2]]
-    elseif move == "intra_backward"
-        edge1 = [nodes_intra[1], nodes[1]]
-        edge2 = [nodes_intra[2], nodes[2]]
+        # elseif move == "intra_backward"
+        #     edge1 = [nodes_intra[1], nodes[1]]
+        #     edge2 = [nodes_intra[2], nodes[2]]
     end
 
     edge_exists1, order_preserved1 = edge_exists_order_preserved(edge1, solution)
@@ -154,7 +154,7 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
         for indices in node_pairs
             move = "intra_forward"
             nodes = [best_solution[indices[1]], best_solution[indices[2]]]
-            nodes_intra =
+            nodes_succ =
                 [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
 
             if any(x -> x in changed, vcat(nodes, nodes_intra))
@@ -237,9 +237,12 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
                 break
             end
         end
-        # println("best cost:", evaluate_solution(best_solution, distance_matrix, cost_vector))
-        # println("LM size: ", length(LM_pq))
+        println(
+            "best cost:",
+            evaluate_solution(best_solution, distance_matrix, cost_vector),
+        )
+        println("LM size: ", length(LM_pq))
     end
-    # println("LOCAL MINIMUM REACHED")
+    println("LOCAL MINIMUM REACHED")
     return best_solution
 end
