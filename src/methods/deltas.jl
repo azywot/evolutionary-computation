@@ -147,26 +147,26 @@ function local_search_previous_deltas(solution, distance_matrix, cost_vector, mo
     while move_found
         move_found = false
         unvisited = collect(setdiff(Set(1:N), Set(best_solution)))
-        node_pairs = collect(Combinatorics.combinations(1:length(solution), 2))
+        changed_intra = intersect(changed, best_solution)
+        node_pairs = collect(Iterators.product(changed_intra, best_solution))
 
         # intra moves
-        for indices in node_pairs
+        for nodes in node_pairs
             move = "intra"
-            nodes = [best_solution[indices[1]], best_solution[indices[2]]]
-            nodes_succ =
-                [best_solution[mod(indices[1], n)+1], best_solution[mod(indices[2], n)+1]]
+            n1, n2 = nodes
+            idx1 = findfirst(==(n1), best_solution)
+            idx2 = findfirst(==(n2), best_solution)
+            nodes_succ = [best_solution[mod(idx1, n)+1], best_solution[mod(idx2, n)+1]]
 
-            if count(x -> x in changed, vcat(nodes, nodes_succ)) > 1
-                if !haskey(LM_pq, (nodes, nodes_succ, move))
-                    _, delta = generate_intra_route_move(
-                        best_solution,
-                        distance_matrix,
-                        indices,
-                        mode,
-                    )
-                    if delta < 0 # brings improvement
-                        LM_pq[(nodes, nodes_succ, move)] = delta
-                    end
+            if !haskey(LM_pq, (nodes, nodes_succ, move))
+                _, delta = generate_intra_route_move(
+                    best_solution,
+                    distance_matrix,
+                    [idx1, idx2],
+                    mode,
+                )
+                if delta < 0 # brings improvement
+                    LM_pq[([n1, n2], nodes_succ, move)] = delta
                 end
             end
         end
