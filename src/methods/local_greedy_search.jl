@@ -112,7 +112,7 @@ Generate a local search greedy solution given a starting solution and a mode.
 - `cost_vector::Vector{Int}`: vector of costs of node
 - `mode::String`: mode of the local search, either "node" or "edge"
 
-returns: a local search solution and its cost
+returns: a local search solution
 """
 function local_greedy_search(solution, distance_matrix, cost_vector, mode)
     N, _ = size(distance_matrix)
@@ -167,7 +167,7 @@ Generate a local search steepest solution given a starting solution and a mode.
 - `cost_vector::Vector{Int}`: vector of costs of node
 - `mode::String`: mode of the local search, either "node" or "edge"
 
-returns: a local search solution and its cost
+returns: a local search solution
 """
 function local_steepest_search(solution, distance_matrix, cost_vector, mode)
 

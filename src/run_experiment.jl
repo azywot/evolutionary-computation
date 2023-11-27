@@ -95,3 +95,22 @@ for letter in ["A"]#, "B", "C", "D"]
         end
     end
 end
+
+
+#  ========== Multiple start local search (MSLS) and iterated local search (ILS) =========
+include("./methods/all_methods.jl")
+filename = "data/TSPA.csv"
+distance_matrix, cost_vector, coords = read_data(filename)
+ITERATIONS = 5
+
+time_limit = @elapsed begin
+    msls_solution = multiple_start_local_search(distance_matrix, cost_vector, ITERATIONS)
+end
+msls_cost = evaluate_solution(msls_solution, distance_matrix, cost_vector)
+println("Multiple start local search cost: ", msls_cost)
+
+
+ils_solution, steepest_counter = iterated_local_search(distance_matrix, cost_vector, time_limit)
+ils_cost = evaluate_solution(ils_solution, distance_matrix, cost_vector)
+println("Iterated local search cost: ", ils_cost)
+println("Steepest counter: ", steepest_counter)
