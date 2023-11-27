@@ -8,13 +8,18 @@ using DataFrames
 - `coords::Vector{Vector{Int64}}`: vector with all the coordinates
 - `cost_vector::Vector{Int64}`: vector with all the costs
 - `method::String`: method used to generate the solution
+- `title::String`: title of the plot
 
 returns: distance matrix, cost vector, coordinates
 """
-function generate_solution_graph(solution_path, coords, cost_vector, method)
+function generate_solution_graph(solution_path, coords, cost_vector, method, title=nothing)
 
-    title =
+    if isnothing(title)
+        title =
         uppercase(replace(method * " " * splitext(basename(solution_path))[1], "_" => " "))
+    else
+        title = uppercase(title)
+    end
 
     df = CSV.read(solution_path, DataFrame)
     coords = reduce(vcat, transpose.(coords))

@@ -99,34 +99,29 @@ end
 
 #  ========== Multiple start local search (MSLS) and iterated local search (ILS) =========
 include("./methods/all_methods.jl")
-MSLS_ITERATIONS = 10
-METHODS_ITERATIONS = 5
+include("./generate_solutions.jl")
+MSLS_ITERATIONS = 200
+METHODS_ITERATIONS = 20
 
 for letter in ["A", "B", "C", "D"]
     filename = "data/TSP$letter.csv"
     distance_matrix, cost_vector, coords = read_data(filename)
-    println("Run parameters: TSP" * "$letter")
-    time_list = []
-    msls_cost_list = []
-    for i in 1:METHODS_ITERATIONS
-        time = @elapsed begin
-            msls_solution = multiple_start_local_search(distance_matrix, cost_vector, MSLS_ITERATIONS)
-        end
-        push!(time_list, time)
-        push!(msls_cost_list, evaluate_solution(msls_solution, distance_matrix, cost_vector))
-    end
-    time_limit = mean(time_list)
-    println("MSLS time stats: ", time_limit, " (", minimum(time_list), " - ", maximum(time_list), ")")
-    println("MSLS cost stats: ", mean(msls_cost_list), " (", minimum(msls_cost_list), " - ", maximum(msls_cost_list), ")")
+    println("Problem instance: TSP" * "$letter")
+    evaluate_msls_ils(distance_matrix, 
+                        cost_vector, 
+                        coords, 
+                        MSLS_ITERATIONS, 
+                        METHODS_ITERATIONS, 
+                        filename, 
+                        true) # verbose
 
-    counter_list = []
-    ils_cost_list = []
-    for i in 1:METHODS_ITERATIONS
-        ils_solution, steepest_counter = iterated_local_search(distance_matrix, cost_vector, time_limit)
-        push!(counter_list, steepest_counter)
-        push!(ils_cost_list, evaluate_solution(ils_solution, distance_matrix, cost_vector))
+    for method in ["msls", "ils"]
+        generate_solution_graph(
+            "results/$method/TSP$letter" * "_best.csv",
+            coords,
+            cost_vector,
+            "$method",
+            "TSP$letter" * " " * "$method best",
+        )
     end
-    println("ILS steepest counter stats: ", mean(counter_list), " (", minimum(counter_list), " - ", maximum(counter_list), ")")
-    println("ILS cost stats: ", mean(ils_cost_list), " (", minimum(ils_cost_list), " - ", maximum(ils_cost_list), ")")
-
 end

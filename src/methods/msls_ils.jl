@@ -8,8 +8,8 @@ using StatsBase
 # Perofrm a multiple start local search algorithm.
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
-- `mode::String`: mode of the local search, either "node" or "edge"
 - `iterations::Int`: number of iterations to run the algorithm
+- `mode::String`: mode of the local search, either "node" or "edge"
 
 returns: a multiple start local search solution
 """
@@ -58,16 +58,16 @@ function perturb_solution(solution, N, perturbation_rate)
 end
 
 """
-# Perofrm an iterated local search algorithm.
+# Perform an iterated local search algorithm.
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
 - `time_limit::Int`: time limit in seconds
-- `perturbation_rate::Float64`: perturbation rate
 - `mode::String`: mode of the local search, either "node" or "edge"
+- `perturbation_rate::Float64`: perturbation rate
 
 returns: an iterated local search solution, local steepest counter
 """
-function iterated_local_search(distance_matrix, cost_vector, time_limit, perturbation_rate = 0.3, mode = "edge")
+function iterated_local_search(distance_matrix, cost_vector, time_limit, mode = "edge", perturbation_rate = 0.3)
 
     N = length(cost_vector)
     best_solution = local_steepest_search(random_solution(N), distance_matrix, cost_vector, mode)

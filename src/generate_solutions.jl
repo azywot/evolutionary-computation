@@ -161,3 +161,133 @@ function evaluate_local_search(
         ),
     )
 end
+
+
+"""
+# Evaluate Statistics for Multiple start local search (MSLS) and iterated local search (ILS)
+- `distance_matrix::Matrix{Int64}` : matrix of distances between nodes
+- `cost_vector::Vector{Int64}` : vector of costs of nodes
+- `coords::Vector{Vector{Int64}}` : coordinates of nodes
+- `msls_iterations::Int`: number of iterations for MSLS
+- `methods_iterations::Int`: number of iterations for both MSLS and ILS
+- `file_path::String`: path to the file
+- `verbose::Bool`: verbose mode
+- `mode::String`: edge or node
+"""
+function evaluate_msls_ils(
+    distance_matrix,
+    cost_vector,
+    coords,
+    msls_iterations,
+    methods_iterations,
+    file_path,
+    verbose = false,
+    mode = "edge",
+)
+    results_dir = joinpath(dirname(dirname(file_path)), "results")
+    filename = splitext(basename(file_path))[1]
+
+    msls_dir_path = joinpath(results_dir, "msls")
+    msls_stats_file_path = joinpath(msls_dir_path, "$filename" * "_stats.csv")
+
+    ils_dir_path = joinpath(results_dir, "ils")
+    ils_stats_file_path = joinpath(ils_dir_path, "$filename" * "_stats.csv")
+
+    msls_times = []
+    msls_values = []
+    msls_best_solution = nothing
+    msls_best_cost = Inf
+    for i in 1:methods_iterations
+        time = @elapsed begin
+            msls_solution = multiple_start_local_search(distance_matrix, cost_vector, msls_iterations, mode)
+        end
+        msls_cost = evaluate_solution(msls_solution, distance_matrix, cost_vector)
+        if msls_cost < msls_best_cost
+            msls_best_solution = msls_solution
+            msls_best_cost = msls_cost
+        end
+
+        push!(msls_times, time)
+        push!(msls_values, msls_cost)
+    end
+
+    time_limit = mean(msls_times)
+    if verbose
+        println("MSLS time stats: ", time_limit, " (", minimum(msls_times), " - ", maximum(msls_times), ")")
+        println("MSLS cost stats: ", mean(msls_values), " (", minimum(msls_values), " - ", maximum(msls_values), ")")
+    end
+
+    ls_runs = []
+    ils_values = []
+    ils_best_solution = nothing
+    ils_best_cost = Inf
+    for i in 1:methods_iterations
+        ils_solution, runs = iterated_local_search(distance_matrix, cost_vector, time_limit, mode)
+        ils_cost = evaluate_solution(ils_solution, distance_matrix, cost_vector)
+        if ils_cost < ils_best_cost
+            ils_best_solution = ils_solution
+            ils_best_cost = ils_cost
+        end
+        push!(ls_runs, runs)
+        push!(ils_values, ils_cost)
+    end
+
+    if verbose
+        println("ILS steepest counter stats: ", mean(ls_runs), " (", minimum(ls_runs), " - ", maximum(ls_runs), ")")
+        println("ILS cost stats: ", mean(ils_values), " (", minimum(ils_values), " - ", maximum(ils_values), ")")
+    end
+
+    msls_stats = DataFrame(
+        stat = ["mean", "min", "max", "time_mean", "time_min", "time_max"],
+        value = [
+            mean(msls_values),
+            minimum(msls_values),
+            maximum(msls_values),
+            mean(msls_times),
+            minimum(msls_times),
+            maximum(msls_times),
+        ],
+    )
+
+    if !isdir(msls_dir_path)
+        mkpath(msls_dir_path)
+    end
+    CSV.write(msls_stats_file_path, msls_stats)
+    best_solution_file_path = joinpath(msls_dir_path, "$filename" * "_best.csv")
+    CSV.write(
+        best_solution_file_path,
+        DataFrame(
+            x = [coords[i][1] for i in msls_best_solution],
+            y = [coords[i][2] for i in msls_best_solution],
+            cost = [cost_vector[i] for i in msls_best_solution],
+            node = [i-1 for i in msls_best_solution]
+        ),
+    )
+
+    ils_stats = DataFrame(
+        stat = ["mean", "min", "max", "ls_runs_mean", "ls_runs_min", "ls_runs_max"],
+        value = [
+            mean(ils_values),
+            minimum(ils_values),
+            maximum(ils_values),
+            mean(ls_runs),
+            minimum(ls_runs),
+            maximum(ls_runs),
+        ],
+    )
+
+    if !isdir(ils_dir_path)
+        mkpath(ils_dir_path)
+    end
+    CSV.write(ils_stats_file_path, ils_stats)
+    best_solution_file_path = joinpath(ils_dir_path, "$filename" * "_best.csv")
+    CSV.write(
+        best_solution_file_path,
+        DataFrame(
+            x = [coords[i][1] for i in ils_best_solution],
+            y = [coords[i][2] for i in ils_best_solution],
+            cost = [cost_vector[i] for i in ils_best_solution],
+            node = [i-1 for i in ils_best_solution]
+        ),
+    )
+end
