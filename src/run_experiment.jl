@@ -99,18 +99,34 @@ end
 
 #  ========== Multiple start local search (MSLS) and iterated local search (ILS) =========
 include("./methods/all_methods.jl")
-filename = "data/TSPA.csv"
-distance_matrix, cost_vector, coords = read_data(filename)
-ITERATIONS = 5
+MSLS_ITERATIONS = 10
+METHODS_ITERATIONS = 5
 
-time_limit = @elapsed begin
-    msls_solution = multiple_start_local_search(distance_matrix, cost_vector, ITERATIONS)
+for letter in ["A", "B", "C", "D"]
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    println("Run parameters: TSP" * "$letter")
+    time_list = []
+    msls_cost_list = []
+    for i in 1:METHODS_ITERATIONS
+        time = @elapsed begin
+            msls_solution = multiple_start_local_search(distance_matrix, cost_vector, MSLS_ITERATIONS)
+        end
+        push!(time_list, time)
+        push!(msls_cost_list, evaluate_solution(msls_solution, distance_matrix, cost_vector))
+    end
+    time_limit = mean(time_list)
+    println("MSLS time stats: ", time_limit, " (", minimum(time_list), " - ", maximum(time_list), ")")
+    println("MSLS cost stats: ", mean(msls_cost_list), " (", minimum(msls_cost_list), " - ", maximum(msls_cost_list), ")")
+
+    counter_list = []
+    ils_cost_list = []
+    for i in 1:METHODS_ITERATIONS
+        ils_solution, steepest_counter = iterated_local_search(distance_matrix, cost_vector, time_limit)
+        push!(counter_list, steepest_counter)
+        push!(ils_cost_list, evaluate_solution(ils_solution, distance_matrix, cost_vector))
+    end
+    println("ILS steepest counter stats: ", mean(counter_list), " (", minimum(counter_list), " - ", maximum(counter_list), ")")
+    println("ILS cost stats: ", mean(ils_cost_list), " (", minimum(ils_cost_list), " - ", maximum(ils_cost_list), ")")
+
 end
-msls_cost = evaluate_solution(msls_solution, distance_matrix, cost_vector)
-println("Multiple start local search cost: ", msls_cost)
-
-
-ils_solution, steepest_counter = iterated_local_search(distance_matrix, cost_vector, time_limit)
-ils_cost = evaluate_solution(ils_solution, distance_matrix, cost_vector)
-println("Iterated local search cost: ", ils_cost)
-println("Steepest counter: ", steepest_counter)

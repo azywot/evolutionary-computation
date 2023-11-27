@@ -61,8 +61,9 @@ end
 # Perofrm an iterated local search algorithm.
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
-- `mode::String`: mode of the local search, either "node" or "edge"
 - `time_limit::Int`: time limit in seconds
+- `perturbation_rate::Float64`: perturbation rate
+- `mode::String`: mode of the local search, either "node" or "edge"
 
 returns: an iterated local search solution, local steepest counter
 """
