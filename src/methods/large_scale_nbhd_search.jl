@@ -14,13 +14,18 @@ Perform a tournament selection to select n candidates from a solution.
 returns: a vector of indices of the selected candidates
 """
 function tournament_selection(n, solution, total_node_costs, tournament_size)
-    selected_indices = Set{Int}()
+    selected_indices = []
+    indices_pool = Set(1:length(solution))
     while length(selected_indices) < n
-        tournament_candidates = sample(1:length(solution), tournament_size, replace = false)
+        available_candidates = setdiff(indices_pool, selected_indices)
+        if length(available_candidates) < tournament_size
+            break
+        end
+        tournament_candidates = sample(collect(available_candidates), tournament_size, replace=false)
         best_candidate = argmax(total_node_costs[tournament_candidates])
         push!(selected_indices, tournament_candidates[best_candidate])
     end
-    return collect(selected_indices)
+    return selected_indices
 end
 
 
