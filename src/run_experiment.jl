@@ -125,3 +125,17 @@ for letter in ["A", "B", "C", "D"]
         )
     end
 end
+
+
+
+#  ======================= LARGE SCALE NBHD SEARCH =======================
+include("./methods/all_methods.jl")
+distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
+N = 200
+instance_sol = random_solution(N)
+time_limit = 20
+
+ls_nbhd_solution, iter_number = large_scale_neighbourhood_search(instance_sol, distance_matrix, cost_vector, time_limit)
+lg_evaluated = evaluate_solution(ls_nbhd_solution, distance_matrix, cost_vector)
+println("Local steepest cost calculated: ", ls_nbhd_solution)
+println("Local steepest cost evaluated: ", lg_evaluated)

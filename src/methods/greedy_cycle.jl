@@ -61,14 +61,21 @@ Compute greedy cycle.
 - `start_node::Int`: starting node
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
+- `solution::Vector{Int}`: solution vector
 returns: a greedy cycle solution
 """
-function greedy_cycle(N, start_node, distances, cost_vector)
+function greedy_cycle(N, start_node, distances, cost_vector, solution = nothing)
     distances = deepcopy(distances) .+ transpose(deepcopy(cost_vector))
-    unvisited = Set(1:N)
-    cycle = [start_node]
-    delete!(unvisited, cycle[1])
 
+    if isnothing(solution)
+        unvisited = Set(1:N)
+        cycle = [start_node]
+        delete!(unvisited, cycle[1])
+    else
+        unvisited = setdiff(Set(1:N), Set(solution))
+        cycle = deepcopy(solution)
+    end
+    
     while length(cycle) < ceil(N / 2)
         min_d = Inf
         nearest_vertex = 0
