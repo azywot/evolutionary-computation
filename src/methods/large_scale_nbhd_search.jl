@@ -3,6 +3,27 @@ using Combinatorics
 include("./local_greedy_search.jl")
 include("./greedy_cycle.jl")
 
+""" 
+Perform a tournament selection to select n candidates from a solution.
+
+- `n::Int`: number of candidates to select
+- `solution::Vector{Int}`: solution
+- `total_node_costs::Vector{Int}`: vector of total node costs
+- `tournament_size::Int`: size of the tournament
+
+returns: a vector of indices of the selected candidates
+"""
+function tournament_selection(n, solution, total_node_costs, tournament_size)
+    selected_indices = Set{Int}()
+    while length(selected_indices) < n
+        tournament_candidates = sample(1:length(solution), tournament_size, replace = false)
+        best_candidate = argmax(total_node_costs[tournament_candidates])
+        push!(selected_indices, tournament_candidates[best_candidate])
+    end
+    return collect(selected_indices)
+end
+
+
 """
 Destroy a solution by removing a certain percentage of nodes.
 
@@ -10,15 +31,22 @@ Destroy a solution by removing a certain percentage of nodes.
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
 - `destroy_rate::Float64`: destroy rate
+- `tournament_size::Int`: size of the tournament
 
 returns: a destroyed solution
 """
-function destroy(solution, distance_matrix, cost_vector, destroy_rate)
+function destroy(solution, distance_matrix, cost_vector, destroy_rate, tournament_size)
+    n = length(solution)
     solution = deepcopy(solution)
-    # TODO: use  distance_matrix, cost_vector while selecting the nodes to destroy
+    total_node_costs = []
+    for node in solution
+        total_node_cost = cost_vector[node] + distance_matrix[solution[mod(node-2, n) + 1], node] + distance_matrix[node, solution[mod(node, n) + 1]]
+        push!(total_node_costs, total_node_cost)
+    end
+
     destroy_number = round(Int, destroy_rate * length(solution))
-    destroy_indices = sample(1:length(solution), destroy_number, replace = false)
-    deleteat!(solution, sort(destroy_indices))
+    selected_indices = tournament_selection(destroy_number, solution, total_node_costs, tournament_size)
+    deleteat!(solution, sort(selected_indices))
     return solution    
 end
 
@@ -28,23 +56,21 @@ Generate a large scale neighbourhood search solution given a starting solution a
 - `solution::Vector{Int}`: initial solution
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
-- `time_limit::Int`: time limit in seconds
-- `destroy_rate::Float64`: destroy rate
-- `use_local_search::Bool`: whether to use local search
-- `mode::String`: mode of the local search, either "node" or "edge"
-
+- `config::Dict`: configuration dictionary with keys:
+    - `time_limit::Int`: time limit in seconds
+    - `destroy_rate::Float64`: destroy rate
+    - `use_local_search::Bool`: whether to use local search
+    - `mode::String`: mode of the local search, either "node" or "edge"
+    - `tournament_size::Int`: size of the tournament
 returns: a local search solution and number of iterations
 """
 function large_scale_neighbourhood_search(
     solution, 
     distance_matrix, 
     cost_vector, 
-    time_limit, 
-    destroy_rate = 0.25, 
-    use_local_search = false,
-    mode = "edge")
+    config)
 
-    solution = local_steepest_search(deepcopy(solution), distance_matrix, cost_vector, mode)
+    solution = local_steepest_search(deepcopy(solution), distance_matrix, cost_vector, config["mode"])
     N, _ = size(distance_matrix)
 
     best_solution = solution
@@ -52,13 +78,13 @@ function large_scale_neighbourhood_search(
     start_time = time()
     iterations = 0
 
-    while time() - start_time < time_limit
+    while time() - start_time < config["time_limit"]
 
-        solution_destoryed = destroy(solution, distance_matrix, cost_vector, destroy_rate)
+        solution_destoryed = destroy(solution, distance_matrix, cost_vector, config["destroy_rate"], config["tournament_size"])
         solution_repaired = greedy_cycle(N, nothing, distance_matrix, cost_vector, solution_destoryed)
 
-        if use_local_search
-            solution = local_steepest_search(solution_repaired, distance_matrix, cost_vector, mode)
+        if config["use_local_search"]
+            solution = local_steepest_search(solution_repaired, distance_matrix, cost_vector, config["mode"])
         else
             solution = solution_repaired
         end
@@ -72,27 +98,4 @@ function large_scale_neighbourhood_search(
     end
 
     return best_solution, iterations
-end
-
-
-
-"""
-Generate a large scale neighbourhood search solution WITH LOCAL SEARCH given a starting solution and a mode.
-- `solution::Vector{Int}`: initial solution
-- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
-- `cost_vector::Vector{Int}`: vector of costs of node
-- `time_limit::Int`: time limit in seconds
-- `destroy_rate::Float64`: destroy rate
-- `mode::String`: mode of the local search, either "node" or "edge"
-
-returns: a local search solution and number of iterations
-"""
-function large_scale_neighbourhood_search_with_ls(    
-    solution, 
-    distance_matrix, 
-    cost_vector, 
-    time_limit, 
-    destroy_rate = 0.25, 
-    mode = "edge")
-    return large_scale_neighbourhood_search(solution, distance_matrix, cost_vector, time_limit, destroy_rate, true, mode)
 end

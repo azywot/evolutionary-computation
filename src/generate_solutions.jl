@@ -57,9 +57,12 @@ end
 - `coords::Vector{Vector{Int64}}` : coordinates of nodes
 - `method::Function`: method to be used to solve the problem
 - `iter::Int`: number of times to run the method default 200
+- `file_path::String`: path to the file
+- `config::Dict{String, Any}`: configuration dictionary
+
  #nodes >= iter as it itetates over the nodes while choosing the starting point
 """
-function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter, file_path)
+function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter, file_path, config = nothing)
 
     N = length(cost_vector)
     values = []
@@ -68,10 +71,23 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
 
     best_solution = nothing
     best_cost = Inf
+    method_counter  = nothing
+    columns = ["mean", "min", "max", "time_mean", "time_min", "time_max"]
 
     for i = 1:iter
-        time = @elapsed begin
-            permutation = method(N, i, distance_matrix, cost_vector)
+        if occursin("large_scale_neighbourhood_search", "$method")
+            init_solution = random_solution(N)
+            permutation, method_counter = method(
+                    init_solution,
+                    distance_matrix,
+                    cost_vector,
+                    config,
+            )
+            time = method_counter
+        else
+            time = @elapsed begin
+                permutation = method(N, i, distance_matrix, cost_vector)
+            end
         end
         push!(times, time)
         cost = evaluate_solution(permutation, distance_matrix, cost_vector)
@@ -86,16 +102,23 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
 
     filename = splitext(basename(file_path))[1] * "_"
     results_dir = joinpath(dirname(dirname(file_path)), "results")
-    dir_path = joinpath(results_dir, "$method")
+
+    if isa(config, Dict) && haskey(config, "method_name") && haskey(config, "method_name")
+        dir_path = joinpath(results_dir, config["method_name"])
+    else
+        dir_path = joinpath(results_dir, "$method")
+    end
 
     stats_file_path = joinpath(dir_path, "$filename" * "stats.csv")
-    stats = get_stats_df(values, times)
+    if isa(config, Dict) && haskey(config, "columns")
+        columns = config["columns"]
+    end
+    stats = get_stats_df(values, times, columns)
 
     if !isdir(dir_path)
         mkpath(dir_path)
     end
     CSV.write(stats_file_path, stats)
-    # CSV.write("data/$filename" * "solution.csv", Tables.table(permutation), writeheader=false)
 
     best_solution_file_path = joinpath(dir_path, "$filename" * "best.csv")
     save_solution(best_solution_file_path, coords, best_solution, cost_vector)

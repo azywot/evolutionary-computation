@@ -130,12 +130,65 @@ end
 
 #  ======================= LARGE SCALE NBHD SEARCH =======================
 include("./methods/all_methods.jl")
-distance_matrix, cost_vector, coords = read_data("data/TSPA.csv", true)
-N = 200
-instance_sol = random_solution(N)
-time_limit = 20
+include("./generate_solutions.jl")
+# time_limits = Dict(
+#     "A" => 183.3111,
+#     "B" => 174.6152,
+#     "C" => 172.8097,
+#     "D" => 170.8673,
+# )
+# ITERATIONS = 20
 
-ls_nbhd_solution, iter_number = large_scale_neighbourhood_search(instance_sol, distance_matrix, cost_vector, time_limit)
-lg_evaluated = evaluate_solution(ls_nbhd_solution, distance_matrix, cost_vector)
-println("Local steepest cost calculated: ", ls_nbhd_solution)
-println("Local steepest cost evaluated: ", lg_evaluated)
+time_limits = Dict(
+    "A" => 2,
+    "B" => 2,
+    "C" => 2,
+    "D" => 2,
+)
+ITERATIONS = 2
+
+config = Dict(
+    # "time_limit" => nothing, # to be set
+    # "method_name" => nothing, # to be set
+    # "use_local_search" => nothing, # to be set
+    "destroy_rate" => 0.25,
+    "mode" => "edge",
+    "tournament_size" => 5,
+    "columns" => ["mean", "min", "max", "iter_mean", "iter_min", "iter_max"]
+)
+
+for letter in ["A", "B", "C", "D"]
+
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    config["time_limit"] = time_limits[letter]
+
+    for (method_name, use_local_search) in zip(["large_scale_nbhd_search", "large_scale_nbhd_search_ls"], [false, true])        
+        
+        config["method_name"] = method_name
+        config["use_local_search"] = use_local_search
+        
+        println(
+                "Run parameters: TSP" *
+                "$letter" *
+                " " *
+                config["method_name"] *
+                ", time limit: " * 
+                string(config["time_limit"]))
+        evaluate_statistics(
+                    distance_matrix, 
+                    cost_vector, 
+                    coords, 
+                    large_scale_neighbourhood_search, 
+                    ITERATIONS, 
+                    filename,
+                    config
+                )
+        generate_solution_graph(
+            "results/"*config["method_name"]*"/TSP$letter" * "_best.csv",
+            coords,
+            cost_vector,
+            config["method_name"]*" (k ="*string(config["tournament_size"])*")", # k = tournament size
+        )
+    end
+end
