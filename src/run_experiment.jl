@@ -165,7 +165,8 @@ for letter in ["A", "B", "C", "D"]
 
     for (method_name, use_local_search) in zip(["large_scale_nbhd_search", "large_scale_nbhd_search_ls"], [false, true])        
         
-        config["method_name"] = method_name
+        d_rate = replace(string(config["destroy_rate"]), "." => "_")
+        config["method_name"] = method_name * "_$d_rate"
         config["use_local_search"] = use_local_search
         
         println(
@@ -188,7 +189,7 @@ for letter in ["A", "B", "C", "D"]
             "results/"*config["method_name"]*"/TSP$letter" * "_best.csv",
             coords,
             cost_vector,
-            config["method_name"]*" (k ="*string(config["tournament_size"])*")", # k = tournament size
+            config["method_name"]*" (k = "*string(config["tournament_size"])*")", # k = tournament size
         )
     end
 end
