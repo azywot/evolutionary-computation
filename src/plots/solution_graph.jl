@@ -71,7 +71,6 @@ function generate_similarity_test_charts(df_path, title = nothing)
 
     df = CSV.read(df_path, DataFrame)
     title = uppercase(title)
-    sort!(df, :cost)
     previous_filename = splitext(basename(df_path))[1]
 
     for column in names(df)
@@ -85,15 +84,14 @@ function generate_similarity_test_charts(df_path, title = nothing)
         corr_coeff = cor(df.cost, df[!, column])
         push!(correlation_coefficients, (column, corr_coeff))
 
-        fig = plot(
+        fig = scatter(
                 df.cost, 
                 df[!, column], 
                 xlabel="objective function", 
                 ylabel=y_label, 
                 title=title * " - " * y_label_full,
                 legend=false,
-                linecolor=:green,
-                linewidth=2,
+                color=:green,
                 )
 
         file_path = joinpath(dirname(df_path), previous_filename * "_$column" * ".png")
