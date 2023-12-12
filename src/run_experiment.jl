@@ -2,6 +2,7 @@ include("./parse_data.jl")
 include("./methods/all_methods.jl")
 include("./generate_solutions.jl")
 include("./plots/solution_graph.jl")
+include("./utils/similarity_tests.jl")
 
 
 # =================================================================
@@ -192,4 +193,38 @@ for letter in ["A", "B", "C", "D"]
             config["method_name"]*" (k = "*string(config["tournament_size"])*")", # k = tournament size
         )
     end
+end
+
+#  ======================= SIMILARITY TESTS =======================
+include("./utils/similarity_tests.jl")
+include("./plots/solution_graph.jl")
+# ex1 = [1, 2, 3, 4]
+# ex2 = [1, 4, 3, 5]
+# edges, nodes = calculate_solution_similarity(ex1, ex2)
+
+dir_path = "results/similarity_tests"
+if !isdir(dir_path)
+    mkpath(dir_path)
+end
+
+ITERATIONS = 1000
+best_solution_path = "results/ils_0_1/"
+
+for letter in ["A", "B", "C", "D"]
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+
+    # read best solution from file (add 1 to each node index to match Julia's 1-indexing)
+    best_solution_content = read(best_solution_path * "TSP$letter" * "_best_nodes.txt", String)
+    best_solution = parse.(Int, split(best_solution_content))
+    best_solution .+= 1
+    # r_sol = random_solution(length(cost_vector))
+    # best_solution = local_greedy_search(r_sol, distance_matrix, cost_vector)
+
+    solution_df = perform_similarity_tests(ITERATIONS, distance_matrix, cost_vector, best_solution)
+    CSV.write(
+        joinpath(dir_path, "TSP$letter" * "_similarity_tests.csv"),
+        solution_df
+    )
+    generate_similarity_test_charts(dir_path * "/TSP$letter" * "_similarity_tests.csv", "TSP$letter")
 end

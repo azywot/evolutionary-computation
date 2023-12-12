@@ -1,6 +1,7 @@
 using Plots
 using CSV
 using DataFrames
+using Statistics
 
 """
 # Generate
@@ -56,4 +57,53 @@ function generate_solution_graph(solution_path, coords, cost_vector, method, tit
 
     file_path = joinpath(dirname(solution_path), previous_filename * ".png")
     savefig(fig, file_path)
+end
+
+
+function generate_similarity_test_charts(df_path, title = nothing)
+    
+    correlation_coefficients = []
+    if isnothing(title)
+        title = uppercase(splitext(basename(df_path))[1])
+    else
+        title = uppercase(title)
+    end
+
+    df = CSV.read(df_path, DataFrame)
+    title = uppercase(title)
+    sort!(df, :cost)
+    previous_filename = splitext(basename(df_path))[1]
+
+    for column in names(df)
+        if column == "cost"
+            continue
+        end
+        parts = split(column, "_")
+        y_label = join(parts[1:end-1], " ")
+        y_label_full = y_label * " (" * parts[end] * ")"
+
+        corr_coeff = cor(df.cost, df[!, column])
+        push!(correlation_coefficients, (column, corr_coeff))
+
+        fig = plot(
+                df.cost, 
+                df[!, column], 
+                xlabel="objective function", 
+                ylabel=y_label, 
+                title=title * " - " * y_label_full,
+                legend=false,
+                linecolor=:green,
+                linewidth=2,
+                )
+
+        file_path = joinpath(dirname(df_path), previous_filename * "_$column" * ".png")
+        savefig(fig, file_path)
+    end
+
+    corr_file_path = joinpath(dirname(df_path), previous_filename * "_correlation_coefficients.csv")
+    corr_df = DataFrame(
+        y = [x[1] for x in correlation_coefficients],
+        cor = [x[2] for x in correlation_coefficients],
+    )
+    CSV.write(corr_file_path, corr_df)
 end
