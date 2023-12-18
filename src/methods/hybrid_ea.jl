@@ -43,6 +43,18 @@ end
 
 
 """
+Pop random node from given list (return and remove)
+- `node_list::Vector{Int}`: vector of node ids
+returns: popped node
+"""
+function pop_random_node(node_list)
+    random_index = rand(1:length(node_list))
+    random_node = splice!(node_list, random_index)
+    return random_node
+end
+
+
+"""
 Operator 1. We locate in the offspring all common nodes and edges and fill the rest of the
 solution at random
 - `parent1::Vector{Int}`: vector of node ids
@@ -55,13 +67,11 @@ function recombine_operation1(parent1, parent2)
     common_edges = find_longest_common_subarrays(parent1, parent2)
     common_edges = collect(Iterators.flatten(common_edges))
     nodes_to_add = collect(setdiff(Set(1:200), Set(common_edges)))
-    for i = i:n
-        if !(parent1[i] in common_edges)
-            random_index = rand(1:length(nodes_to_add))
-            random_node = splice!(nodes_to_add, random_index)
-            child[i] = random_node
-        else
+    for i = 1:n
+        if parent1[i] in common_edges
             child[i] = parent1[i]
+        else
+            child[i] = pop_random_node(nodes_to_add)
         end
     end
     return child
@@ -85,10 +95,21 @@ function recombine_operation2(parent1, parent2)
     return child
 end
 
+
+"""
+Take all intersecting nodes, fill the rest with random + repair maybe
+- `parent1::Vector{Int}`: vector of node ids
+- `parent2::Vector{Int}`: vector of node ids
+returns: child solution
+"""
 function recombine_operation3(parent1, parent2)
-    # TODO: our approach
     n = length(parent1)
-    child = zeros(Int, n)
+    child = collect(intersect(parent1, parent2))
+    nodes_to_add = collect(setdiff(Set(1:200), child))
+    while length(child) < n
+        push!(child, pop_random_node(nodes_to_add))
+    end
+    # TODO repair
     return child
 end
 
@@ -126,7 +147,7 @@ function hybrid_evolutionary_algorithm(
         push!(population, (solution_cost, solution))
     end
 
-    worst_solution = maximum(population, lt = (x, y) -> x[1] < y[1])
+    worst_solution = maximum(population)
 
     while time() - start_time < time_limit
         parents = sample(population, 2, replace = false)
@@ -139,9 +160,10 @@ function hybrid_evolutionary_algorithm(
         if !(offspring_tuple in population) && offspring_cost < worst_solution[1]
             push!(population, offspring_tuple)
             deleteat!(population, findfirst(==(worst_solution), population))
-            worst_solution = maximum(population, lt = (x, y) -> x[1] < y[1])
+            worst_solution = maximum(population)
         end
     end
-
+    best_solution = minimum(population)
+    println(best_solution[1])
     return best_solution
 end
