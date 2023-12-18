@@ -56,13 +56,12 @@ function recombine_operation1(parent1, parent2)
     common_edges = collect(Iterators.flatten(common_edges))
     nodes_to_add = collect(setdiff(Set(1:200), Set(common_edges)))
     for i = i:n
-        if parent1[i]
-            not in common_edges
+        if !(parent1[i] in common_edges)
             random_index = rand(1:length(nodes_to_add))
             random_node = splice!(nodes_to_add, random_index)
             child[i] = random_node
         else
-            child[i] = parent1[1]
+            child[i] = parent1[i]
         end
     end
     return child
