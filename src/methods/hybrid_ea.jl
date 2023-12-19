@@ -65,6 +65,7 @@ solution at random
 returns: child solution
 """
 function recombine_operation1(parent1, parent2, distance_matrix, cost_vector, N)
+    # A 73800
     n = length(parent1)
     child = zeros(Int, n)
     common_edges = find_longest_common_subarrays(parent1, parent2)
@@ -95,6 +96,7 @@ for the initial population).
 returns: child solution
 """
 function recombine_operation2(parent1, parent2, distance_matrix, cost_vector, N)
+    # A 73290
     n = length(parent1)
     common_edges = find_longest_common_subarrays(parent1, parent2)
     common_edges = collect(Iterators.flatten(common_edges))
@@ -106,7 +108,7 @@ end
 
 
 """
-Take all intersecting nodes, fill the rest with random + repair maybe
+Take all intersecting nodes + repair
 - `parent1::Vector{Int}`: vector of node ids
 - `parent2::Vector{Int}`: vector of node ids
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
@@ -115,14 +117,11 @@ Take all intersecting nodes, fill the rest with random + repair maybe
 returns: child solution
 """
 function recombine_operation3(parent1, parent2, distance_matrix, cost_vector, N)
+    # A 73505
     n = length(parent1)
-    child = collect(intersect(parent1, parent2))
-    nodes_to_add = collect(setdiff(Set(1:200), child))
-    while length(child) < n
-        push!(child, pop_random_node(nodes_to_add))
-    end
-    # TODO repair
-    return child
+    child_destroyed = collect(intersect(parent1, parent2))
+    child_repaired = greedy_cycle(N, nothing, distance_matrix, cost_vector, child_destroyed)
+    return child_repaired
 end
 
 
@@ -141,7 +140,7 @@ function hybrid_evolutionary_algorithm(
     distance_matrix,
     cost_vector,
     time_limit,
-    recombine = recombine_operation2,
+    recombine = recombine_operation3,
     initial_population_size = 20,
     mode = "edge",
 )
