@@ -228,3 +228,79 @@ for letter in ["A", "B", "C", "D"]
     )
     generate_similarity_test_charts(dir_path * "/TSP$letter" * "_similarity_tests.csv", "TSP$letter")
 end
+
+
+#  ======================= HYBRID EA =======================
+include("./methods/all_methods.jl")
+include("./generate_solutions.jl")
+# time_limits = Dict(
+#     "A" => 183.3111,
+#     "B" => 174.6152,
+#     "C" => 172.8097,
+#     "D" => 170.8673,
+# )
+# ITERATIONS = 20
+
+time_limits = Dict(
+    "A" => 2,
+    "B" => 2,
+    "C" => 2,
+    "D" => 2,
+)
+ITERATIONS = 1
+
+config = Dict(
+    # "time_limit" => nothing, # to be set
+    # "method_name" => nothing, # to be set
+    # "recombine" => nothing, # to be set
+    # "use_local_search" => nothing, # to be set
+    "population_size" => 20,
+    "max_patience" => 10,
+    "perturbation_rate" => 0.1,
+    "mode" => "edge",
+    "columns" => ["mean", "min", "max", "iter_mean", "iter_min", "iter_max"]
+)
+
+for letter in ["A"]#, "B", "C", "D"]
+
+    filename = "data/TSP$letter.csv"
+    distance_matrix, cost_vector, coords = read_data(filename)
+    config["time_limit"] = time_limits[letter]
+
+    for (recombine, use_local_search) in 
+        zip([recombine_operation1, recombine_operation2, recombine_operation2, recombine_operation3, recombine_operation3],
+            [true, false, true, false, true])   
+        
+        if use_local_search
+            config["method_name"] = "hea" * "_$recombine" * "_ls"
+        else
+            config["method_name"] = "hea" * "_$recombine"
+        end
+        config["recombine"] = recombine
+        config["use_local_search"] = use_local_search
+        
+        println(
+                "Run parameters: TSP" *
+                "$letter" *
+                " " *
+                config["method_name"] *
+                ", time limit: " * 
+                string(config["time_limit"]))
+        evaluate_statistics(
+                    distance_matrix, 
+                    cost_vector, 
+                    coords, 
+                    hybrid_evolutionary_algorithm, 
+                    ITERATIONS, 
+                    filename,
+                    config
+                )
+        generate_solution_graph(
+            "results/"*config["method_name"]*"/TSP$letter" * "_best.csv",
+            coords,
+            cost_vector,
+            config["method_name"],
+        )
+    end
+end
+

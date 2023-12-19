@@ -3,6 +3,7 @@ using StatsBase
 
 include("./random.jl")
 include("./local_greedy_search.jl")
+include("./msls_ils.jl")
 
 # Generate an initial population X 
 # repeat 
@@ -97,11 +98,11 @@ returns: child solution
 """
 function recombine_operation2(parent1, parent2, distance_matrix, cost_vector, N)
     # A 73290
-    n = length(parent1)
+    N, _ = size(distance_matrix)
     common_edges = find_longest_common_subarrays(parent1, parent2)
     common_edges = collect(Iterators.flatten(common_edges))
-    nodes_to_delete = collect(setdiff(Set(1:200), Set(common_edges)))
-    child_destroyed = collect(setdiff(Set(parent1), Set(nodes_to_delete)))
+    nodes_to_delete = collect(setdiff(Set(1:N), Set(common_edges)))
+    child_destroyed = collect(filter(x -> !(x in nodes_to_delete), parent1)) # preserve the order of nodes
     child_repaired = greedy_cycle(N, nothing, distance_matrix, cost_vector, child_destroyed)
     return child_repaired
 end
@@ -129,52 +130,77 @@ end
 Generate a hybrid evolutionary algorithm solution given a starting solution and a mode.
 - `distance_matrix::Matrix{Int}`: matrix of distances between nodes
 - `cost_vector::Vector{Int}`: vector of costs of node
-- `time_limit::Int`: time limit in seconds
-- `recombine::Function`: recombination function
-- `initial_population_size::Int`: size of the initial population
-- `mode::String`: mode of the local search, either "node" or "edge"
+- `config::Dict`: configuration dictionary with keys:
+    - `time_limit::Int`: time limit in seconds
+    - `recombine::Function`: recombination function
+    - `population_size::Int`: size of the initial population
+    - `use_local_search::Bool`: whether to use local search
+    - `max_patience::Int`: maximum number of iterations without improvement
+    - `perturbation_rate::Float64`: perturbation rate
+    - `mode::String`: mode of the local search, either "node" or "edge"
 
-returns: a hybrid evolutionary algorithm solution
+returns: a hybrid evolutionary algorithm solution and number of iterations
 """
 function hybrid_evolutionary_algorithm(
+    solution, # to be compatible with the test setup
     distance_matrix,
     cost_vector,
-    time_limit,
-    recombine = recombine_operation3,
-    initial_population_size = 20,
-    mode = "edge",
+    config,
 )
-
     N, _ = size(distance_matrix)
     distance_matrix = deepcopy(distance_matrix)
     cost_vector = deepcopy(cost_vector)
 
     population = [] # List of tuples (cost, solution)
     start_time = time()
-    for i = 1:initial_population_size
-        solution =
-            local_steepest_search(random_solution(N), distance_matrix, cost_vector, mode)
+
+    for i = 1:config["population_size"]
+        solution = local_steepest_search(random_solution(N), distance_matrix, cost_vector, config["mode"])
         solution_cost = evaluate_solution(solution, distance_matrix, cost_vector)
         push!(population, (solution_cost, solution))
     end
 
     worst_solution = maximum(population)
+    iteration_counter = 0
+    patience = 0
 
-    while time() - start_time < time_limit
+    while time() - start_time < config["time_limit"]
         parents = sample(population, 2, replace = false)
-        offspring = recombine(parents[1][2], parents[2][2], distance_matrix, cost_vector, N)
-        offspring_ls = local_steepest_search(offspring, distance_matrix, cost_vector, mode)
-        offspring_cost = evaluate_solution(offspring_ls, distance_matrix, cost_vector)
-        offspring_tuple = (offspring_cost, offspring_ls)
+        offspring = config["recombine"](parents[1][2], parents[2][2], distance_matrix, cost_vector, N)
+
+        if config["recombine"] == recombine_operation1
+            offspring = local_steepest_search(offspring, distance_matrix, cost_vector, config["mode"])
+        elseif config["use_local_search"]
+            offspring = local_steepest_search(offspring, distance_matrix, cost_vector, config["mode"])
+        end
+
+        offspring_cost = evaluate_solution(offspring, distance_matrix, cost_vector)
+        offspring_tuple = (offspring_cost, offspring)
 
         # making sure there are no copies
         if !(offspring_tuple in population) && offspring_cost < worst_solution[1]
             push!(population, offspring_tuple)
             deleteat!(population, findfirst(==(worst_solution), population))
             worst_solution = maximum(population)
+            patience = 0
+        else
+            patience += 1
+            if patience == config["max_patience"]
+                patience -= 1
+                perturbed_solution = perturb_solution(minimum(population), N, config["perturbation_rate"]) 
+                perturbed_solution_ls = local_steepest_search(perturbed_solution, distance_matrix, cost_vector, config["mode"])
+                perturbed_solution_cost = evaluate_solution(perturbed_solution_ls, distance_matrix, cost_vector)
+                perturbed_solution_tuple = (perturbed_solution_cost, perturbed_solution_ls)
+                if !(perturbed_solution_tuple in population) && perturbed_solution_cost < worst_solution[1]
+                    push!(population, perturbed_solution_tuple)
+                    deleteat!(population, findfirst(==(worst_solution), population))
+                    worst_solution = maximum(population)
+                    patience = 0
+                end
+            end
         end
+        iteration_counter += 1
     end
     best_solution = minimum(population)
-    println(best_solution[1])
-    return best_solution
+    return best_solution[2], iteration_counter
 end

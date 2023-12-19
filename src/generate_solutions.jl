@@ -75,7 +75,7 @@ function evaluate_statistics(distance_matrix, cost_vector, coords, method, iter,
     columns = ["mean", "min", "max", "time_mean", "time_min", "time_max"]
 
     for i = 1:iter
-        if occursin("large_scale_neighbourhood_search", "$method")
+        if occursin("large_scale_neighbourhood_search", "$method") || occursin("hybrid_evolutionary_algorithm", "$method")
             init_solution = random_solution(N)
             permutation, method_counter = method(
                     init_solution,
