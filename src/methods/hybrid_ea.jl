@@ -59,14 +59,17 @@ Operator 1. We locate in the offspring all common nodes and edges and fill the r
 solution at random
 - `parent1::Vector{Int}`: vector of node ids
 - `parent2::Vector{Int}`: vector of node ids
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of node
+- `N::Int`: number of all nodes
 returns: child solution
 """
-function recombine_operation1(parent1, parent2)
+function recombine_operation1(parent1, parent2, distance_matrix, cost_vector, N)
     n = length(parent1)
     child = zeros(Int, n)
     common_edges = find_longest_common_subarrays(parent1, parent2)
     common_edges = collect(Iterators.flatten(common_edges))
-    nodes_to_add = collect(setdiff(Set(1:200), Set(common_edges)))
+    nodes_to_add = collect(setdiff(Set(1:N), Set(common_edges)))
     for i = 1:n
         if parent1[i] in common_edges
             child[i] = parent1[i]
@@ -86,13 +89,19 @@ version of the algorithm without local search after recombination (we still use 
 for the initial population).
 - `parent1::Vector{Int}`: vector of node ids
 - `parent2::Vector{Int}`: vector of node ids
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of node
+- `N::Int`: number of all nodes
 returns: child solution
 """
-function recombine_operation2(parent1, parent2)
-    # TODO
+function recombine_operation2(parent1, parent2, distance_matrix, cost_vector, N)
     n = length(parent1)
-    child = zeros(Int, n)
-    return child
+    common_edges = find_longest_common_subarrays(parent1, parent2)
+    common_edges = collect(Iterators.flatten(common_edges))
+    nodes_to_delete = collect(setdiff(Set(1:200), Set(common_edges)))
+    child_destroyed = collect(setdiff(Set(parent1), Set(nodes_to_delete)))
+    child_repaired = greedy_cycle(N, nothing, distance_matrix, cost_vector, child_destroyed)
+    return child_repaired
 end
 
 
@@ -100,9 +109,12 @@ end
 Take all intersecting nodes, fill the rest with random + repair maybe
 - `parent1::Vector{Int}`: vector of node ids
 - `parent2::Vector{Int}`: vector of node ids
+- `distance_matrix::Matrix{Int}`: matrix of distances between nodes
+- `cost_vector::Vector{Int}`: vector of costs of node
+- `N::Int`: number of all nodes
 returns: child solution
 """
-function recombine_operation3(parent1, parent2)
+function recombine_operation3(parent1, parent2, distance_matrix, cost_vector, N)
     n = length(parent1)
     child = collect(intersect(parent1, parent2))
     nodes_to_add = collect(setdiff(Set(1:200), child))
@@ -129,7 +141,7 @@ function hybrid_evolutionary_algorithm(
     distance_matrix,
     cost_vector,
     time_limit,
-    recombine = recombine_operation1,
+    recombine = recombine_operation2,
     initial_population_size = 20,
     mode = "edge",
 )
@@ -151,7 +163,7 @@ function hybrid_evolutionary_algorithm(
 
     while time() - start_time < time_limit
         parents = sample(population, 2, replace = false)
-        offspring = recombine(parents[1][2], parents[2][2])
+        offspring = recombine(parents[1][2], parents[2][2], distance_matrix, cost_vector, N)
         offspring_ls = local_steepest_search(offspring, distance_matrix, cost_vector, mode)
         offspring_cost = evaluate_solution(offspring_ls, distance_matrix, cost_vector)
         offspring_tuple = (offspring_cost, offspring_ls)
